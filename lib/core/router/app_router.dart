@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/auth_providers.dart';
+import '../../features/auth/presentation/login_screen.dart';
 import '../../features/chat/presentation/chat_list_screen.dart';
 import '../../shared/widgets/feature_screen.dart';
 import 'route_paths.dart';
@@ -49,11 +50,7 @@ GoRouter createAppRouter(AppAccess access) => GoRouter(
       path: RoutePaths.onboarding,
       builder: (_, _) => const FeatureScreen(title: 'Welcome to Relay'),
     ),
-    GoRoute(
-      path: RoutePaths.login,
-      builder: (_, _) =>
-          const FeatureScreen(title: 'Sign in', message: 'Sign in to Relay'),
-    ),
+    GoRoute(path: RoutePaths.login, builder: (_, _) => const LoginScreen()),
     GoRoute(
       path: RoutePaths.register,
       builder: (_, _) => const FeatureScreen(title: 'Create account'),
