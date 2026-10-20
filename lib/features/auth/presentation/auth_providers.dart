@@ -15,6 +15,9 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 });
 
 final authStateProvider = StreamProvider<AppUser?>((ref) {
+  if (!ref.watch(appConfigProvider).isSupabaseConfigured) {
+    return Stream.value(null);
+  }
   final repository = ref.watch(authRepositoryProvider);
   return repository.authStateChanges();
 });

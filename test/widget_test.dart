@@ -11,8 +11,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:relay_messenger/main.dart';
 
 void main() {
-  testWidgets('unauthenticated root app exposes the sign-in screen', (WidgetTester tester) async {
+  testWidgets('unauthenticated root app exposes the sign-in screen', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(const ProviderScope(child: RelayApp()));
+    await tester.pump();
 
     expect(find.text('Sign in to Relay'), findsOneWidget);
   });
