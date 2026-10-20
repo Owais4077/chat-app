@@ -1,8 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'core/router/app_router.dart';
 
-void main() {
+import 'core/config/app_config.dart';
+import 'core/router/app_router.dart';
+import 'core/supabase/supabase_bootstrap.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  const config = AppConfig(
+    supabaseUrl: String.fromEnvironment('SUPABASE_URL'),
+    supabaseAnonKey: String.fromEnvironment('SUPABASE_ANON_KEY'),
+    turnUrl: String.fromEnvironment('TURN_URL'),
+    turnUsername: String.fromEnvironment('TURN_USERNAME'),
+  );
+  await SupabaseBootstrap.initialize(config);
   runApp(const ProviderScope(child: RelayApp()));
 }
 
