@@ -6,13 +6,14 @@
 // tree, read text, and verify that the values of widget properties are correct.
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:relay_messenger/main.dart';
 
 void main() {
-  testWidgets('root app exposes the Relay title', (WidgetTester tester) async {
-    await tester.pumpWidget(const RelayApp());
+  testWidgets('unauthenticated root app exposes the sign-in screen', (WidgetTester tester) async {
+    await tester.pumpWidget(const ProviderScope(child: RelayApp()));
 
-    expect(find.text('Relay'), findsOneWidget);
+    expect(find.text('Sign in to Relay'), findsOneWidget);
   });
 }

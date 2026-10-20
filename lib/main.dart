@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/router/app_router.dart';
 
 void main() {
   runApp(const ProviderScope(child: RelayApp()));
 }
 
-class RelayApp extends StatelessWidget {
+class RelayApp extends ConsumerWidget {
   const RelayApp({super.key});
 
   // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+  Widget build(BuildContext context, WidgetRef ref) {
+    return MaterialApp.router(
       title: 'Relay',
       theme: ThemeData(
         // This is the theme of your application.
@@ -31,9 +32,7 @@ class RelayApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const Scaffold(
-        body: Center(child: Text('Relay')),
-      ),
+      routerConfig: ref.watch(appRouterProvider),
     );
   }
 }

@@ -1,0 +1,22 @@
+abstract final class RoutePaths {
+  static const login = '/login';
+  static const splash = '/splash';
+  static const onboarding = '/onboarding';
+  static const register = '/register';
+  static const forgotPassword = '/forgot-password';
+  static const verification = '/verification';
+  static const profileSetup = '/profile/setup';
+  static const profile = '/profile';
+  static const chats = '/chats';
+  static const contacts = '/contacts';
+  static const calls = '/calls';
+  static const settings = '/settings';
+  static const search = '/search';
+  static const newConversation = '/new-conversation';
+  static const conversation = '/conversation';
+  static const notificationSettings = '/settings/notifications';
+  static const privacySettings = '/settings/privacy';
+  static const accountSettings = '/settings/account';
+  static const blockedUsers = '/settings/blocked-users';
+  static const logout = '/logout';
+}
