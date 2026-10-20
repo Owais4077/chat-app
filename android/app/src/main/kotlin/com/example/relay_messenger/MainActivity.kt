@@ -1,4 +1,4 @@
-package com.example.relay_messenger
+package chat.app
 
 import io.flutter.embedding.android.FlutterActivity
 
