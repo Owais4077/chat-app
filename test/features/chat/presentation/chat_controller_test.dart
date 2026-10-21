@@ -4,12 +4,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:relay_messenger/features/chat/domain/chat_message.dart';
 import 'package:relay_messenger/features/chat/domain/chat_repository.dart';
 import 'package:relay_messenger/features/chat/domain/conversation.dart';
+import 'package:relay_messenger/features/chat/domain/conversation_summary.dart';
 import 'package:relay_messenger/features/chat/data/mock_chat_repository.dart';
 import 'package:relay_messenger/features/chat/presentation/chat_controller.dart';
 
 void main() {
   test('rejects blank messages with a validation error', () async {
-    final controller = ChatController(MockChatRepository(), 'demo-conversation');
+    final controller = ChatController(
+      MockChatRepository(),
+      'demo-conversation',
+    );
     await controller.send('   ');
     expect(controller.error, isNotNull);
   });
@@ -47,9 +51,27 @@ class _StreamingChatRepository implements ChatRepository {
   }) => throw UnimplementedError();
 
   @override
+  Future<String> startDirectConversation(String targetUserId) =>
+      throw UnimplementedError();
+
+  @override
+  Future<String> createGroup({
+    required String name,
+    required List<String> memberIds,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<void> markConversationRead(String conversationId) =>
+      throw UnimplementedError();
+
+  @override
   Stream<List<Conversation>> watchConversations() => const Stream.empty();
 
   @override
-  Stream<List<ChatMessage>> watchMessages(String conversationId) => _messages.stream;
-}
+  Stream<List<ConversationSummary>> watchConversationSummaries() =>
+      const Stream.empty();
 
+  @override
+  Stream<List<ChatMessage>> watchMessages(String conversationId) =>
+      _messages.stream;
+}

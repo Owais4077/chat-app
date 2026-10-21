@@ -14,7 +14,7 @@ class MockChatRepository implements ChatRepository {
       Stream.value(const []);
   @override
   Future<String> startDirectConversation(String targetUserId) async =>
-      'direct-' + targetUserId;
+      'direct-$targetUserId';
   @override
   Future<String> createGroup({
     required String name,
@@ -37,8 +37,9 @@ class MockChatRepository implements ChatRepository {
     required String conversationId,
     required String text,
   }) async {
-    if (text.trim().isEmpty)
+    if (text.trim().isEmpty) {
       throw ArgumentError.value(text, 'text', 'must not be blank');
+    }
     final message = ChatMessage(
       id: 'message-${(_messages[conversationId]?.length ?? 0) + 1}',
       conversationId: conversationId,

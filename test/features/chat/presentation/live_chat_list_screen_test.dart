@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:relay_messenger/features/chat/domain/chat_message.dart';
 import 'package:relay_messenger/features/chat/domain/chat_repository.dart';
 import 'package:relay_messenger/features/chat/domain/conversation.dart';
+import 'package:relay_messenger/features/chat/domain/conversation_summary.dart';
 import 'package:relay_messenger/features/chat/presentation/chat_list_screen.dart';
 import 'package:relay_messenger/features/chat/presentation/chat_providers.dart';
 
@@ -44,7 +45,26 @@ class _FakeChatRepository implements ChatRepository {
   }) => throw UnimplementedError();
 
   @override
-  Stream<List<Conversation>> watchConversations() => Stream.value(conversations);
+  Future<String> startDirectConversation(String targetUserId) =>
+      throw UnimplementedError();
+
+  @override
+  Future<String> createGroup({
+    required String name,
+    required List<String> memberIds,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<void> markConversationRead(String conversationId) =>
+      throw UnimplementedError();
+
+  @override
+  Stream<List<Conversation>> watchConversations() =>
+      Stream.value(conversations);
+
+  @override
+  Stream<List<ConversationSummary>> watchConversationSummaries() =>
+      const Stream.empty();
 
   @override
   Stream<List<ChatMessage>> watchMessages(String conversationId) =>
