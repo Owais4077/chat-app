@@ -14,7 +14,13 @@ String? redirectFor(AppAccess access, String location) {
   if (access == AppAccess.loading && location != RoutePaths.splash) {
     return RoutePaths.splash;
   }
-  final public = {RoutePaths.login, RoutePaths.profileSetup};
+  final public = {
+    RoutePaths.login,
+    RoutePaths.register,
+    RoutePaths.forgotPassword,
+    RoutePaths.verification,
+    RoutePaths.profileSetup,
+  };
   if (access == AppAccess.unauthenticated && !public.contains(location)) {
     return RoutePaths.login;
   }

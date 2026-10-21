@@ -7,6 +7,13 @@ void main() {
   });
 
   test('redirects incomplete profiles to profile setup', () {
-    expect(redirectFor(AppAccess.profileIncomplete, '/chats'), '/profile/setup');
+    expect(
+      redirectFor(AppAccess.profileIncomplete, '/chats'),
+      '/profile/setup',
+    );
+  });
+
+  test('allows signed-out users to open registration', () {
+    expect(redirectFor(AppAccess.unauthenticated, '/register'), isNull);
   });
 }
