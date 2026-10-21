@@ -3,10 +3,18 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../domain/chat_message.dart';
 import '../domain/chat_repository.dart';
 import '../domain/conversation.dart';
+import '../domain/conversation_summary.dart';
 
 abstract interface class ChatDataSource {
   Stream<List<Map<String, dynamic>>> watchConversationRows();
+  Stream<List<Map<String, dynamic>>> watchConversationSummaryRows();
   Stream<List<Map<String, dynamic>>> watchMessageRows(String conversationId);
+  Future<String> createDirectConversation(String targetUserId);
+  Future<String> createGroupConversation({
+    required String name,
+    required List<String> memberIds,
+  });
+  Future<void> markConversationRead(String conversationId);
   Future<Map<String, dynamic>> insertTextMessage({
     required String conversationId,
     required String text,
@@ -33,11 +41,20 @@ class SupabaseChatRepository implements ChatRepository {
   }
 
   @override
+  Stream<List<ConversationSummary>> watchConversationSummaries() =>
+      _source.watchConversationSummaryRows().map(
+        (rows) => rows
+            .map(ConversationSummary.fromSupabaseRow)
+            .toList(growable: false),
+      );
+
+  @override
   Stream<List<ChatMessage>> watchMessages(String conversationId) {
-    return _source.watchMessageRows(conversationId).map(
-          (rows) => rows
-              .map(ChatMessage.fromSupabaseRow)
-              .toList(growable: false),
+    return _source
+        .watchMessageRows(conversationId)
+        .map(
+          (rows) =>
+              rows.map(ChatMessage.fromSupabaseRow).toList(growable: false),
         );
   }
 
@@ -56,6 +73,49 @@ class SupabaseChatRepository implements ChatRepository {
     );
     return ChatMessage.fromSupabaseRow(row);
   }
+
+  @override
+  Future<String> startDirectConversation(String targetUserId) {
+    if (targetUserId.trim().isEmpty) {
+      throw ArgumentError.value(
+        targetUserId,
+        'targetUserId',
+        'must not be blank',
+      );
+    }
+    return _source.createDirectConversation(targetUserId);
+  }
+
+  @override
+  Future<String> createGroup({
+    required String name,
+    required List<String> memberIds,
+  }) {
+    final normalizedName = name.trim();
+    if (normalizedName.isEmpty) {
+      throw ArgumentError.value(name, 'name', 'must not be blank');
+    }
+    final normalizedMemberIds = memberIds
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty)
+        .toSet()
+        .toList(growable: false);
+    if (normalizedMemberIds.isEmpty) {
+      throw ArgumentError.value(
+        memberIds,
+        'memberIds',
+        'must contain at least one member',
+      );
+    }
+    return _source.createGroupConversation(
+      name: normalizedName,
+      memberIds: normalizedMemberIds,
+    );
+  }
+
+  @override
+  Future<void> markConversationRead(String conversationId) =>
+      _source.markConversationRead(conversationId);
 }
 
 class SupabaseChatDataSource implements ChatDataSource {
@@ -72,6 +132,20 @@ class SupabaseChatDataSource implements ChatDataSource {
         .stream(primaryKey: const ['conversation_id', 'user_id'])
         .eq('user_id', userId)
         .map((rows) => List<Map<String, dynamic>>.from(rows));
+  }
+
+  @override
+  Stream<List<Map<String, dynamic>>> watchConversationSummaryRows() async* {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return;
+    yield await _fetchConversationSummaryRows();
+    await for (final _
+        in _client
+            .from('conversation_members')
+            .stream(primaryKey: const ['conversation_id', 'user_id'])
+            .eq('user_id', userId)) {
+      yield await _fetchConversationSummaryRows();
+    }
   }
 
   @override
@@ -101,5 +175,39 @@ class SupabaseChatDataSource implements ChatDataSource {
         .select()
         .single();
     return Map<String, dynamic>.from(row);
+  }
+
+  @override
+  Future<String> createDirectConversation(String targetUserId) async {
+    final response = await _client.rpc(
+      'get_or_create_direct_conversation',
+      params: {'target_user_id': targetUserId},
+    );
+    return response as String;
+  }
+
+  @override
+  Future<String> createGroupConversation({
+    required String name,
+    required List<String> memberIds,
+  }) async {
+    final response = await _client.rpc(
+      'create_group_conversation',
+      params: {'group_name': name, 'member_ids': memberIds},
+    );
+    return response as String;
+  }
+
+  @override
+  Future<void> markConversationRead(String conversationId) async {
+    await _client.rpc(
+      'mark_conversation_read',
+      params: {'target_conversation_id': conversationId},
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchConversationSummaryRows() async {
+    final response = await _client.rpc('get_conversation_summaries');
+    return List<Map<String, dynamic>>.from(response as List);
   }
 }
