@@ -5,6 +5,7 @@ import '../../features/auth/presentation/auth_providers.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/chat/presentation/chat_list_screen.dart';
+import '../../features/contacts/presentation/contacts_screen.dart';
 import '../../shared/widgets/feature_screen.dart';
 import 'route_paths.dart';
 
@@ -119,7 +120,7 @@ GoRouter createAppRouter(AppAccess access) => GoRouter(
         ),
         GoRoute(
           path: RoutePaths.contacts,
-          builder: (_, _) => const FeatureScreen(title: 'Contacts'),
+          builder: (_, _) => const ContactsScreen(),
         ),
         GoRoute(
           path: RoutePaths.calls,
