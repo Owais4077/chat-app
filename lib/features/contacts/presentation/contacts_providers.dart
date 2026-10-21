@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/config/config_providers.dart';
 import '../data/supabase_contact_repository.dart';
+import '../domain/contact.dart';
 import '../domain/contact_repository.dart';
 
 final contactRepositoryProvider = Provider<ContactRepository>((ref) {
@@ -12,7 +13,14 @@ final contactRepositoryProvider = Provider<ContactRepository>((ref) {
   return SupabaseContactRepository(Supabase.instance.client);
 });
 
+final contactsProvider = StreamProvider<List<Contact>>(
+  (ref) => ref.watch(contactRepositoryProvider).watchContacts(),
+);
+
 class _UnavailableContactRepository implements ContactRepository {
+  @override
+  Stream<List<Contact>> watchContacts() => Stream.value(const []);
+
   @override
   Future<void> saveContact({
     required String displayName,
