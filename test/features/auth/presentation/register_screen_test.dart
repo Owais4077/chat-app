@@ -22,12 +22,43 @@ void main() {
       );
 
       await tester.enterText(find.byType(TextFormField).at(0), 'new@relay.dev');
-      await tester.enterText(find.byType(TextFormField).at(1), 'password123');
+      await tester.enterText(find.byType(TextFormField).at(1), 'Password123');
       await tester.tap(find.widgetWithText(FilledButton, 'Create account'));
       await tester.pump();
 
       expect(
         find.text('Check your email to confirm your account.'),
+        findsOneWidget,
+      );
+    },
+  );
+
+  test('maps an already-registered email to safe account guidance', () {
+    expect(
+      registrationErrorMessage('User already registered'),
+      'An account already exists for this email. Sign in instead.',
+    );
+  });
+
+  testWidgets(
+    'rejects passwords that do not meet the configured character policy',
+    (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authRepositoryProvider.overrideWithValue(_ConfirmationRepository()),
+          ],
+          child: const MaterialApp(home: RegisterScreen()),
+        ),
+      );
+
+      await tester.enterText(find.byType(TextFormField).at(0), 'new@relay.dev');
+      await tester.enterText(find.byType(TextFormField).at(1), 'lowercase1');
+      await tester.tap(find.widgetWithText(FilledButton, 'Create account'));
+      await tester.pump();
+
+      expect(
+        find.text('Use uppercase, lowercase letters, and a number.'),
         findsOneWidget,
       );
     },

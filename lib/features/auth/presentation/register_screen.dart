@@ -4,6 +4,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/auth_repository.dart';
 import 'auth_providers.dart';
 
+String registrationErrorMessage(Object error) {
+  final message = error.toString().toLowerCase();
+  if (message.contains('already registered') ||
+      message.contains('already exists')) {
+    return 'An account already exists for this email. Sign in instead.';
+  }
+  if (message.contains('password') && message.contains('least')) {
+    return 'Use a stronger password and try again.';
+  }
+  if (message.contains('email') && message.contains('valid')) {
+    return 'Enter a valid email address.';
+  }
+  if (message.contains('rate limit')) {
+    return 'Too many attempts. Please wait a few minutes and try again.';
+  }
+  return 'Unable to create your account. Check your internet connection and try again.';
+}
+
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
@@ -42,11 +60,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               : 'Account created.',
         );
       }
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
-        setState(
-          () => _message = 'Unable to create your account. Please try again.',
-        );
+        setState(() => _message = registrationErrorMessage(error));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -68,7 +84,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Text(
-                  'Create your Relay account',
+                  'Create your CHAT APP account',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 24),
@@ -85,9 +101,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   controller: _password,
                   obscureText: true,
                   decoration: const InputDecoration(labelText: 'Password'),
-                  validator: (v) => v == null || v.length < 8
-                      ? 'Use at least 8 characters.'
-                      : null,
+                  validator: (v) {
+                    if (v == null || v.length < 8) {
+                      return 'Use at least 8 characters.';
+                    }
+                    if (!RegExp(r'[A-Z]').hasMatch(v) ||
+                        !RegExp(r'[a-z]').hasMatch(v) ||
+                        !RegExp(r'\d').hasMatch(v)) {
+                      return 'Use uppercase, lowercase letters, and a number.';
+                    }
+                    return null;
+                  },
                 ),
                 if (_message case final message?)
                   Padding(
