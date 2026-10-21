@@ -19,6 +19,9 @@ String registrationErrorMessage(Object error) {
   if (message.contains('rate limit')) {
     return 'Too many attempts. Please wait a few minutes and try again.';
   }
+  if (message.contains('signup') && message.contains('disabled')) {
+    return 'Email sign-up is disabled in Supabase. Enable the Email provider and try again.';
+  }
   return 'Unable to create your account. Check your internet connection and try again.';
 }
 

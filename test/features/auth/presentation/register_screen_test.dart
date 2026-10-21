@@ -40,6 +40,13 @@ void main() {
     );
   });
 
+  test('explains when Supabase has disabled email sign-up', () {
+    expect(
+      registrationErrorMessage('Email signups are disabled'),
+      'Email sign-up is disabled in Supabase. Enable the Email provider and try again.',
+    );
+  });
+
   testWidgets(
     'rejects passwords that do not meet the configured character policy',
     (tester) async {
