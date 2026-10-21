@@ -9,5 +9,6 @@ void main() {
     await tester.pumpWidget(const ProviderScope(child: RelayApp()));
 
     expect(find.byType(MaterialApp), findsOneWidget);
+    expect(tester.widget<MaterialApp>(find.byType(MaterialApp)).title, 'CHAT APP');
   });
 }
