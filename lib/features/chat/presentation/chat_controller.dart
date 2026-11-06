@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/errors/app_failure.dart';
 import '../domain/chat_message.dart';
 import '../domain/chat_repository.dart';
@@ -11,8 +12,10 @@ class ChatController extends ChangeNotifier {
   final ChatRepository _repository;
   final String conversationId;
   StreamSubscription<List<ChatMessage>>? _messageSubscription;
-  AppFailure? error;
+  AppFailure? sendError;
   final messages = <ChatMessage>[];
+
+  AppFailure? get error => sendError;
 
   void startListening() {
     _messageSubscription?.cancel();
@@ -23,35 +26,35 @@ class ChatController extends ChangeNotifier {
             messages
               ..clear()
               ..addAll(items);
-            error = null;
             notifyListeners();
           },
           onError: (_, _) {
-            error = const AppFailure.unknown();
-            notifyListeners();
+            // Keep existing messages; do not show send error for stream updates
           },
         );
     _repository.markConversationRead(conversationId).ignore();
   }
 
   Future<void> send(String text) async {
-    if (text.trim().isEmpty) {
-      error = const AppFailure.validation('Write a message before sending.');
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) {
+      sendError = const AppFailure.validation('Write a message before sending.');
       notifyListeners();
       return;
     }
     try {
       final message = await _repository.sendTextMessage(
         conversationId: conversationId,
-        text: text,
+        text: trimmed,
       );
       if (!messages.any((existing) => existing.id == message.id)) {
         messages.add(message);
       }
-      error = null;
+      sendError = null;
       notifyListeners();
-    } catch (_) {
-      error = const AppFailure.unknown();
+    } catch (e) {
+      final message = e is PostgrestException ? e.message : e.toString();
+      sendError = AppFailure.unknown(message);
       notifyListeners();
     }
   }

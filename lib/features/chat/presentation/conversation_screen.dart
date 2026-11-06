@@ -178,7 +178,9 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Could not send message. Please retry.',
+                      err.messageText != null && err.messageText!.isNotEmpty
+                          ? err.messageText!
+                          : 'Could not send message. Please retry.',
                       style: TextStyle(fontSize: 12, color: theme.colorScheme.onErrorContainer),
                     ),
                   ),
