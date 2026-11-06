@@ -50,6 +50,7 @@ class MockChatRepository implements ChatRepository {
     final message = ChatMessage(
       id: 'message-${(_messages[conversationId]?.length ?? 0) + 1}',
       conversationId: conversationId,
+      senderId: 'demo-user',
       text: text.trim(),
       status: MessageStatus.sent,
       createdAt: DateTime.now(),
