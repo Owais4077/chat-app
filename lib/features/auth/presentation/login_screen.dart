@@ -36,7 +36,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       await ref
           .read(authRepositoryProvider)
-          .signIn(email: _email.text, password: _password.text);
+          .signIn(email: _email.text.trim(), password: _password.text);
       if (mounted) context.go(RoutePaths.chats);
     } on AuthException catch (error) {
       if (mounted) setState(() => _error = _loginErrorMessage(error));

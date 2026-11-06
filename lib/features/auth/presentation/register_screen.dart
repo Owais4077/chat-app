@@ -57,7 +57,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     try {
       final result = await ref
           .read(authRepositoryProvider)
-          .signUp(email: _email.text, password: _password.text);
+          .signUp(email: _email.text.trim(), password: _password.text);
       if (mounted) {
         if (result == SignUpResult.authenticated) {
           context.go(RoutePaths.chats);

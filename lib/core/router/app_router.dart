@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/auth/domain/auth_repository.dart';
 import '../../features/auth/presentation/auth_providers.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
@@ -40,6 +41,7 @@ String? redirectFor(AppAccess access, String location) {
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final authRepo = ref.watch(authRepositoryProvider);
   final auth = ref.watch(authStateProvider);
   final access = switch (auth) {
     AsyncLoading() => AppAccess.loading,
@@ -47,12 +49,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     AsyncData(value: final user) when user == null => AppAccess.unauthenticated,
     AsyncData() => AppAccess.authenticated,
   };
-  return createAppRouter(access);
+  return createAppRouter(access, authRepo);
 });
 
-GoRouter createAppRouter(AppAccess access) => GoRouter(
+GoRouter createAppRouter(AppAccess access, [AuthRepository? authRepo]) => GoRouter(
   initialLocation: RoutePaths.chats,
-  redirect: (context, state) => redirectFor(access, state.uri.path),
+  redirect: (context, state) {
+    final effectiveAccess = (authRepo?.currentUser() != null)
+        ? AppAccess.authenticated
+        : access;
+    return redirectFor(effectiveAccess, state.uri.path);
+  },
   routes: [
     GoRoute(
       path: RoutePaths.splash,
