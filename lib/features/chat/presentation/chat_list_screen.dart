@@ -55,7 +55,14 @@ class ChatListScreen extends ConsumerWidget {
                         ),
                       )
                     : null,
-                onTap: () => context.push('/conversation/${item.id}'),
+                onTap: () => context.push(
+                  '/conversation/${item.id}',
+                  extra: {
+                    'title': item.title,
+                    'isGroup': item.isGroup,
+                    'myRole': item.myRole,
+                  },
+                ),
               );
             },
           );

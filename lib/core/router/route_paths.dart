@@ -16,6 +16,7 @@ abstract final class RoutePaths {
   static const newGroup = '/groups/new';
   static const conversation = '/conversation';
   static const conversationDetail = '/conversation/:conversationId';
+  static const groupInfo = '/conversation/:conversationId/group-info';
   static const notificationSettings = '/settings/notifications';
   static const privacySettings = '/settings/privacy';
   static const accountSettings = '/settings/account';
@@ -24,4 +25,7 @@ abstract final class RoutePaths {
 
   static String conversationWithId(String conversationId) =>
       '/conversation/$conversationId';
+
+  static String groupInfoPath(String conversationId) =>
+      '/conversation/$conversationId/group-info';
 }

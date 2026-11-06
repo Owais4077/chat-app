@@ -19,6 +19,20 @@ abstract interface class ChatDataSource {
     required String conversationId,
     required String text,
   });
+  Future<List<Map<String, dynamic>>> fetchGroupMembers(String conversationId);
+  Future<void> addGroupMember({
+    required String conversationId,
+    required String userId,
+  });
+  Future<void> removeGroupMember({
+    required String conversationId,
+    required String userId,
+  });
+  Future<void> setGroupMemberRole({
+    required String conversationId,
+    required String userId,
+    required String role,
+  });
 }
 
 class SupabaseChatRepository implements ChatRepository {
@@ -116,6 +130,36 @@ class SupabaseChatRepository implements ChatRepository {
   @override
   Future<void> markConversationRead(String conversationId) =>
       _source.markConversationRead(conversationId);
+
+  @override
+  Future<List<GroupMember>> getGroupMembers(String conversationId) async {
+    final rows = await _source.fetchGroupMembers(conversationId);
+    return rows.map(GroupMember.fromRow).toList(growable: false);
+  }
+
+  @override
+  Future<void> addGroupMember({
+    required String conversationId,
+    required String userId,
+  }) => _source.addGroupMember(conversationId: conversationId, userId: userId);
+
+  @override
+  Future<void> removeGroupMember({
+    required String conversationId,
+    required String userId,
+  }) =>
+      _source.removeGroupMember(conversationId: conversationId, userId: userId);
+
+  @override
+  Future<void> setGroupMemberRole({
+    required String conversationId,
+    required String userId,
+    required GroupMemberRole role,
+  }) => _source.setGroupMemberRole(
+    conversationId: conversationId,
+    userId: userId,
+    role: role.name,
+  );
 }
 
 class SupabaseChatDataSource implements ChatDataSource {
@@ -203,6 +247,61 @@ class SupabaseChatDataSource implements ChatDataSource {
     await _client.rpc(
       'mark_conversation_read',
       params: {'target_conversation_id': conversationId},
+    );
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> fetchGroupMembers(
+    String conversationId,
+  ) async {
+    final response = await _client
+        .from('conversation_members')
+        .select('user_id, role, profiles(display_name)')
+        .eq('conversation_id', conversationId);
+    return List<Map<String, dynamic>>.from(response as List);
+  }
+
+  @override
+  Future<void> addGroupMember({
+    required String conversationId,
+    required String userId,
+  }) async {
+    await _client.rpc(
+      'add_group_member',
+      params: {
+        'target_conversation_id': conversationId,
+        'target_user_id': userId,
+      },
+    );
+  }
+
+  @override
+  Future<void> removeGroupMember({
+    required String conversationId,
+    required String userId,
+  }) async {
+    await _client.rpc(
+      'remove_group_member',
+      params: {
+        'target_conversation_id': conversationId,
+        'target_user_id': userId,
+      },
+    );
+  }
+
+  @override
+  Future<void> setGroupMemberRole({
+    required String conversationId,
+    required String userId,
+    required String role,
+  }) async {
+    await _client.rpc(
+      'set_group_member_role',
+      params: {
+        'target_conversation_id': conversationId,
+        'target_user_id': userId,
+        'target_role': role,
+      },
     );
   }
 

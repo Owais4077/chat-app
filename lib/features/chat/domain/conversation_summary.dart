@@ -33,3 +33,25 @@ class ConversationSummary {
   final int unreadCount;
   final GroupMemberRole myRole;
 }
+
+class GroupMember {
+  const GroupMember({
+    required this.userId,
+    required this.displayName,
+    required this.role,
+  });
+
+  factory GroupMember.fromRow(Map<String, dynamic> row) {
+    final profile = row['profiles'] as Map<String, dynamic>?;
+    final name = (profile?['display_name'] as String?)?.trim();
+    return GroupMember(
+      userId: row['user_id'] as String,
+      displayName: (name != null && name.isNotEmpty) ? name : 'Member',
+      role: GroupMemberRole.values.byName(row['role'] as String),
+    );
+  }
+
+  final String userId;
+  final String displayName;
+  final GroupMemberRole role;
+}

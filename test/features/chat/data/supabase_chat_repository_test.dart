@@ -118,6 +118,30 @@ class _FakeChatDataSource implements ChatDataSource {
   Future<void> markConversationRead(String conversationId) async {}
 
   @override
+  Future<List<Map<String, dynamic>>> fetchGroupMembers(
+    String conversationId,
+  ) async => const [];
+
+  @override
+  Future<void> addGroupMember({
+    required String conversationId,
+    required String userId,
+  }) async {}
+
+  @override
+  Future<void> removeGroupMember({
+    required String conversationId,
+    required String userId,
+  }) async {}
+
+  @override
+  Future<void> setGroupMemberRole({
+    required String conversationId,
+    required String userId,
+    required String role,
+  }) async {}
+
+  @override
   Future<Map<String, dynamic>> insertTextMessage({
     required String conversationId,
     required String text,

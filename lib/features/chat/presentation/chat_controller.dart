@@ -31,6 +31,7 @@ class ChatController extends ChangeNotifier {
             notifyListeners();
           },
         );
+    _repository.markConversationRead(conversationId).ignore();
   }
 
   Future<void> send(String text) async {

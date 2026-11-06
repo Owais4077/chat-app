@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/auth_providers.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
+import '../../features/chat/domain/conversation_summary.dart';
 import '../../features/chat/presentation/chat_list_screen.dart';
 import '../../features/chat/presentation/conversation_screen.dart';
 import '../../features/chat/presentation/create_group_screen.dart';
+import '../../features/chat/presentation/group_info_screen.dart';
 import '../../features/contacts/presentation/contacts_screen.dart';
 import '../../shared/widgets/feature_screen.dart';
 import 'route_paths.dart';
@@ -94,10 +96,35 @@ GoRouter createAppRouter(AppAccess access) => GoRouter(
       builder: (_, _) => const CreateGroupScreen(),
     ),
     GoRoute(
+      path: RoutePaths.groupInfo,
+      builder: (_, state) {
+        final conversationId = state.pathParameters['conversationId'] ?? '';
+        final extra = state.extra as Map<String, dynamic>?;
+        final title = extra?['title'] as String? ?? 'Group info';
+        final role =
+            extra?['myRole'] as GroupMemberRole? ?? GroupMemberRole.member;
+        return GroupInfoScreen(
+          conversationId: conversationId,
+          title: title,
+          myRole: role,
+        );
+      },
+    ),
+    GoRoute(
       path: RoutePaths.conversationDetail,
       builder: (_, state) {
         final conversationId = state.pathParameters['conversationId'] ?? '';
-        return ConversationScreen(conversationId: conversationId);
+        final extra = state.extra as Map<String, dynamic>?;
+        final title = extra?['title'] as String?;
+        final isGroup = extra?['isGroup'] as bool? ?? false;
+        final myRole =
+            extra?['myRole'] as GroupMemberRole? ?? GroupMemberRole.member;
+        return ConversationScreen(
+          conversationId: conversationId,
+          title: title,
+          isGroup: isGroup,
+          myRole: myRole,
+        );
       },
     ),
     GoRoute(

@@ -61,8 +61,30 @@ class _StreamingChatRepository implements ChatRepository {
   }) => throw UnimplementedError();
 
   @override
-  Future<void> markConversationRead(String conversationId) =>
-      throw UnimplementedError();
+  Future<void> markConversationRead(String conversationId) async {}
+
+  @override
+  Future<List<GroupMember>> getGroupMembers(String conversationId) async =>
+      const [];
+
+  @override
+  Future<void> addGroupMember({
+    required String conversationId,
+    required String userId,
+  }) async {}
+
+  @override
+  Future<void> removeGroupMember({
+    required String conversationId,
+    required String userId,
+  }) async {}
+
+  @override
+  Future<void> setGroupMemberRole({
+    required String conversationId,
+    required String userId,
+    required GroupMemberRole role,
+  }) async {}
 
   @override
   Stream<List<Conversation>> watchConversations() => const Stream.empty();

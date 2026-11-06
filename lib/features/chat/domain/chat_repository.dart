@@ -16,4 +16,18 @@ abstract interface class ChatRepository {
     required String conversationId,
     required String text,
   });
+  Future<List<GroupMember>> getGroupMembers(String conversationId);
+  Future<void> addGroupMember({
+    required String conversationId,
+    required String userId,
+  });
+  Future<void> removeGroupMember({
+    required String conversationId,
+    required String userId,
+  });
+  Future<void> setGroupMemberRole({
+    required String conversationId,
+    required String userId,
+    required GroupMemberRole role,
+  });
 }

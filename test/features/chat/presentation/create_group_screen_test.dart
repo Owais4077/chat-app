@@ -184,6 +184,29 @@ class _FakeChatRepository implements ChatRepository {
     required String conversationId,
     required String text,
   }) => throw UnimplementedError();
+
+  @override
+  Future<List<GroupMember>> getGroupMembers(String conversationId) async =>
+      const [];
+
+  @override
+  Future<void> addGroupMember({
+    required String conversationId,
+    required String userId,
+  }) async {}
+
+  @override
+  Future<void> removeGroupMember({
+    required String conversationId,
+    required String userId,
+  }) async {}
+
+  @override
+  Future<void> setGroupMemberRole({
+    required String conversationId,
+    required String userId,
+    required GroupMemberRole role,
+  }) async {}
 }
 
 class _FakeContactRepository implements ContactRepository {
