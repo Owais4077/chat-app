@@ -47,4 +47,32 @@ void main() {
       );
     },
   );
+
+  test('requires authentication for group creation, conversation, and group info', () {
+    expect(redirectFor(AppAccess.unauthenticated, '/groups/new'), '/login');
+    expect(
+      redirectFor(AppAccess.unauthenticated, '/conversation/conv-123'),
+      '/login',
+    );
+    expect(
+      redirectFor(
+        AppAccess.unauthenticated,
+        '/conversation/conv-123/group-info',
+      ),
+      '/login',
+    );
+
+    expect(redirectFor(AppAccess.authenticated, '/groups/new'), isNull);
+    expect(
+      redirectFor(AppAccess.authenticated, '/conversation/conv-123'),
+      isNull,
+    );
+    expect(
+      redirectFor(
+        AppAccess.authenticated,
+        '/conversation/conv-123/group-info',
+      ),
+      isNull,
+    );
+  });
 }

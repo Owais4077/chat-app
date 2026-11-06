@@ -192,3 +192,4 @@ class _FakeGroupChatRepository implements ChatRepository {
   Future<String> startDirectConversation(String targetUserId) =>
       throw UnimplementedError();
 }
+

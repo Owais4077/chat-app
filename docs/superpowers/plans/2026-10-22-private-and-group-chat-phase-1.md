@@ -40,31 +40,31 @@
 - Produces `get_or_create_direct_conversation(uuid) returns uuid`, `create_group_conversation(text, uuid[]) returns uuid`, `add_group_member(uuid, uuid)`, `remove_group_member(uuid, uuid)`, `set_group_member_role(uuid, uuid, public.member_role)`, `mark_conversation_read(uuid)`, and `get_conversation_summaries()`.
 - Consumed by Tasks 2-5.
 
-- [ ] **Step 1: Write failing SQL contract tests**
+- [x] **Step 1: Write failing SQL contract tests**
 
 Assert the migration contains auth validation, controlled `security definer` search paths, direct-chat self/block checks, role/last-owner checks, authenticated grants/public revokes, and uses `conversation_members` as membership authority.
 
-- [ ] **Step 2: Verify red**
+- [x] **Step 2: Verify red**
 
 Run: `flutter test test/supabase/private_and_group_chat_contract_test.dart`
 
 Expected: FAIL because the migration does not exist.
 
-- [ ] **Step 3: Implement the migration**
+- [x] **Step 3: Implement the migration**
 
 Create those RPCs and a member-only summary result with `conversation_id`, `is_group`, `title`, `last_message_preview`, `last_message_at`, `unread_count`, and `my_role`. The RPCs validate the caller, roles, target users, duplicates, blocks, and last-owner invariant. Use `conversation_members` consistently; do not expose phone/email fields.
 
-- [ ] **Step 4: Document migration application**
+- [x] **Step 4: Document migration application**
 
 Add the SQL Editor application procedure and expected `Success. No rows returned` result to `supabase/README.md`.
 
-- [ ] **Step 5: Verify green**
+- [x] **Step 5: Verify green**
 
 Run: `flutter test test/supabase/private_and_group_chat_contract_test.dart`
 
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add supabase/migrations/202610220002_private_and_group_chat.sql supabase/README.md test/supabase/private_and_group_chat_contract_test.dart
@@ -86,27 +86,27 @@ git commit -m "feat: add secure private and group chat RPCs"
 - Produces `ConversationSummary`, `GroupMember`, `Future<String> startDirectConversation(String targetUserId)`, `Future<String> createGroup({required String name, required List<String> memberIds})`, `Future<void> markConversationRead(String conversationId)`, and `Stream<List<ConversationSummary>> watchConversationSummaries()`.
 - Consumes Task 1 RPCs; consumed by Tasks 3-5.
 
-- [ ] **Step 1: Write failing repository tests**
+- [x] **Step 1: Write failing repository tests**
 
 Cover summary mapping, blank preview normalization, direct RPC parameters, group ID deduplication, and blank group-name rejection before network work.
 
-- [ ] **Step 2: Verify red**
+- [x] **Step 2: Verify red**
 
 Run: `flutter test test/features/chat/data/supabase_chat_repository_test.dart test/features/chat/data/mock_chat_repository_test.dart`
 
 Expected: FAIL because models and operations are absent.
 
-- [ ] **Step 3: Implement summary and operations**
+- [x] **Step 3: Implement summary and operations**
 
 Extend `ChatDataSource` and both repositories. Fetch summaries through RPC and use membership Realtime as an invalidation signal that refetches summaries. Preserve behaviorally equivalent mock support.
 
-- [ ] **Step 4: Verify green**
+- [x] **Step 4: Verify green**
 
 Run: `flutter test test/features/chat/data/supabase_chat_repository_test.dart test/features/chat/data/mock_chat_repository_test.dart`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add lib/features/chat test/features/chat/data
@@ -127,27 +127,27 @@ git commit -m "feat: add conversation summaries and group operations"
 - Produces `Contact { id, displayName, phoneE164, registeredUserId? }` and `Stream<List<Contact>> watchContacts()`.
 - Consumes Task 2 `startDirectConversation`; consumed by Task 4.
 
-- [ ] **Step 1: Write failing contact screen tests**
+- [x] **Step 1: Write failing contact screen tests**
 
 Require a registered contact to show **Message**, an unregistered contact to show **Not on CHAT APP**, and a Message tap to start a chat and navigate using its returned ID.
 
-- [ ] **Step 2: Verify red**
+- [x] **Step 2: Verify red**
 
 Run: `flutter test test/features/contacts/presentation/contacts_screen_test.dart`
 
 Expected: FAIL because streaming contacts and actions are absent.
 
-- [ ] **Step 3: Implement contact list and action**
+- [x] **Step 3: Implement contact list and action**
 
 Keep the manual Save form, render saved contacts below it, and use `registered_user_id` only for availability. Never render another user's phone identity.
 
-- [ ] **Step 4: Verify green**
+- [x] **Step 4: Verify green**
 
 Run: `flutter test test/features/contacts/presentation/contacts_screen_test.dart`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add lib/features/contacts test/features/contacts/presentation/contacts_screen_test.dart
@@ -169,27 +169,27 @@ git commit -m "feat: message registered contacts"
 - Consumes Task 2 summaries/create-group and Task 3 contacts.
 - Produces parameterized routes `/conversation/:conversationId` and `/groups/new`; consumed by Task 5.
 
-- [ ] **Step 1: Write failing list and create-group tests**
+- [x] **Step 1: Write failing list and create-group tests**
 
 Assert title, preview, group icon, and positive-only unread badge. Assert a name plus selected registered contacts invokes `createGroup`; blank name/no members show validation without invoking it.
 
-- [ ] **Step 2: Verify red**
+- [x] **Step 2: Verify red**
 
 Run: `flutter test test/features/chat/presentation/chat_list_screen_test.dart test/features/chat/presentation/create_group_screen_test.dart`
 
 Expected: FAIL because summaries and group screen are absent.
 
-- [ ] **Step 3: Implement list, routes, and setup UI**
+- [x] **Step 3: Implement list, routes, and setup UI**
 
 Replace raw conversations with summaries. Add Chats menu actions **New message** (Contacts) and **New group**. Pass a conversation ID through route parameters, never in-memory objects.
 
-- [ ] **Step 4: Verify green**
+- [x] **Step 4: Verify green**
 
 Run: `flutter test test/features/chat/presentation/chat_list_screen_test.dart test/features/chat/presentation/create_group_screen_test.dart`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add lib/features/chat lib/core/router test/features/chat/presentation
@@ -213,27 +213,27 @@ git commit -m "feat: create private and group conversations"
 - Consumes Task 1 membership RPCs and Task 2 summary role/title data.
 - Produces route `/conversation/:conversationId/group-info`.
 
-- [ ] **Step 1: Write failing screen tests**
+- [x] **Step 1: Write failing screen tests**
 
 Assert opening marks read; a group exposes **Group info** while direct chat does not; ordinary members cannot see management actions; owners can; failures show safe copy.
 
-- [ ] **Step 2: Verify red**
+- [x] **Step 2: Verify red**
 
 Run: `flutter test test/features/chat/presentation/conversation_screen_test.dart test/features/chat/presentation/group_info_screen_test.dart`
 
 Expected: FAIL because group controls and read state are absent.
 
-- [ ] **Step 3: Implement group/read behavior**
+- [x] **Step 3: Implement group/read behavior**
 
 Pass title/group/role data through navigation. Mark read after the conversation listener begins. Add group member list and actions through repository RPCs, gating UI by role while keeping the server authoritative.
 
-- [ ] **Step 4: Verify green**
+- [x] **Step 4: Verify green**
 
 Run: `flutter test test/features/chat/presentation/conversation_screen_test.dart test/features/chat/presentation/group_info_screen_test.dart`
 
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add lib/features/chat lib/core/router test/features/chat/presentation
@@ -249,27 +249,27 @@ git commit -m "feat: manage group members and read state"
 
 **Interfaces:** Consumes Tasks 1-5 and produces two-account rollout instructions.
 
-- [ ] **Step 1: Write failing router test**
+- [x] **Step 1: Write failing router test**
 
 Require `/groups/new`, the parameterized conversation route, and its group-info child route to be reachable only after authentication.
 
-- [ ] **Step 2: Verify red**
+- [x] **Step 2: Verify red**
 
 Run: `flutter test test/core/router/app_router_test.dart`
 
 Expected: FAIL when required route/redirect is absent.
 
-- [ ] **Step 3: Add rollout documentation**
+- [x] **Step 3: Add rollout documentation**
 
 Document migration application, enabling Realtime tables, public Dart defines, and two-account tests for private messages, group messages, permissions, unread state, and RLS isolation.
 
-- [ ] **Step 4: Run full verification**
+- [x] **Step 4: Run full verification**
 
 Run: `dart format lib test; flutter analyze; flutter test`
 
 Expected: every command exits 0 with no analyzer issue or test failure.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add README.md supabase/README.md test/core/router/app_router_test.dart
