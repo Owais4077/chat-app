@@ -29,6 +29,33 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> sendEmailOtp({required String email}) async {}
+
+  @override
+  Future<void> verifyEmailOtp({
+    required String email,
+    required String token,
+  }) async {
+    _user = AppUser(id: 'user-${email.hashCode}', email: email.trim());
+    _controller.add(_user);
+  }
+
+  @override
+  Future<void> sendPhoneOtp({required String phone}) async {}
+
+  @override
+  Future<void> verifyPhoneOtp({
+    required String phone,
+    required String token,
+  }) async {
+    _user = AppUser(
+      id: 'user-${phone.hashCode}',
+      email: '$phone@relay.local',
+    );
+    _controller.add(_user);
+  }
+
+  @override
   Future<void> signOut() async {
     _user = null;
     _controller.add(null);

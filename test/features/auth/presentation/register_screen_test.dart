@@ -89,4 +89,18 @@ class _ConfirmationRepository implements AuthRepository {
     required String email,
     required String password,
   }) async => SignUpResult.confirmationRequired;
+  @override
+  Future<void> sendEmailOtp({required String email}) async {}
+  @override
+  Future<void> verifyEmailOtp({
+    required String email,
+    required String token,
+  }) async {}
+  @override
+  Future<void> sendPhoneOtp({required String phone}) async {}
+  @override
+  Future<void> verifyPhoneOtp({
+    required String phone,
+    required String token,
+  }) async {}
 }

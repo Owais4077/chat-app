@@ -52,10 +52,37 @@ void main() {
 
     expect(find.text('Incorrect email or password.'), findsOneWidget);
   });
+
+  testWidgets('can switch to Phone OTP and request verification code', (
+    tester,
+  ) async {
+    final repository = _RecordingAuthRepository();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [authRepositoryProvider.overrideWithValue(repository)],
+        child: const MaterialApp(home: LoginScreen()),
+      ),
+    );
+
+    await tester.tap(find.text('Phone OTP'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Send verification code'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextFormField).first, '+923001234567');
+    await tester.tap(find.text('Send verification code'));
+    await tester.pumpAndSettle();
+
+    expect(repository.lastSentPhone, '+923001234567');
+    expect(find.text('Verify & Sign in'), findsOneWidget);
+  });
 }
 
 class _RecordingAuthRepository implements AuthRepository {
   var signInCalls = 0;
+  String? lastSentPhone;
+  String? lastSentEmail;
 
   @override
   Stream<AppUser?> authStateChanges() => const Stream.empty();
@@ -76,6 +103,28 @@ class _RecordingAuthRepository implements AuthRepository {
     required String email,
     required String password,
   }) async => SignUpResult.authenticated;
+
+  @override
+  Future<void> sendEmailOtp({required String email}) async {
+    lastSentEmail = email;
+  }
+
+  @override
+  Future<void> verifyEmailOtp({
+    required String email,
+    required String token,
+  }) async {}
+
+  @override
+  Future<void> sendPhoneOtp({required String phone}) async {
+    lastSentPhone = phone;
+  }
+
+  @override
+  Future<void> verifyPhoneOtp({
+    required String phone,
+    required String token,
+  }) async {}
 }
 
 class _RejectingAuthRepository extends _RecordingAuthRepository {

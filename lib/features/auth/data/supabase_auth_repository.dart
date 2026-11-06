@@ -39,6 +39,40 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> sendEmailOtp({required String email}) async {
+    await _client.auth.signInWithOtp(email: email.trim());
+  }
+
+  @override
+  Future<void> verifyEmailOtp({
+    required String email,
+    required String token,
+  }) async {
+    await _client.auth.verifyOTP(
+      type: OtpType.email,
+      email: email.trim(),
+      token: token.trim(),
+    );
+  }
+
+  @override
+  Future<void> sendPhoneOtp({required String phone}) async {
+    await _client.auth.signInWithOtp(phone: phone.trim());
+  }
+
+  @override
+  Future<void> verifyPhoneOtp({
+    required String phone,
+    required String token,
+  }) async {
+    await _client.auth.verifyOTP(
+      type: OtpType.sms,
+      phone: phone.trim(),
+      token: token.trim(),
+    );
+  }
+
+  @override
   Future<void> signOut() => _client.auth.signOut();
 
   static AppUser? _toAppUser(User? user) =>
