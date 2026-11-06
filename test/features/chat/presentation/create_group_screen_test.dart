@@ -8,6 +8,7 @@ import 'package:relay_messenger/features/chat/domain/conversation_summary.dart';
 import 'package:relay_messenger/features/chat/presentation/chat_providers.dart';
 import 'package:relay_messenger/features/chat/presentation/create_group_screen.dart';
 import 'package:relay_messenger/features/contacts/domain/contact.dart';
+import 'package:relay_messenger/features/contacts/domain/registered_user.dart';
 import 'package:relay_messenger/features/contacts/domain/contact_repository.dart';
 import 'package:relay_messenger/features/contacts/presentation/contacts_providers.dart';
 
@@ -222,4 +223,10 @@ class _FakeContactRepository implements ContactRepository {
     required String displayName,
     required String phoneE164,
   }) async {}
+
+  @override
+  Future<void> setMyPhoneIdentity(String phoneE164) async {}
+
+  @override
+  Future<List<RegisteredUser>> fetchRegisteredUsers() async => const [];
 }

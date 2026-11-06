@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:relay_messenger/features/contacts/domain/contact_repository.dart';
 import 'package:relay_messenger/features/contacts/domain/contact.dart';
+import 'package:relay_messenger/features/contacts/domain/registered_user.dart';
 import 'package:relay_messenger/features/contacts/presentation/contacts_providers.dart';
 import 'package:relay_messenger/features/contacts/presentation/contacts_screen.dart';
 
@@ -79,4 +80,10 @@ class _FakeContactRepository implements ContactRepository {
     name = displayName;
     phone = phoneE164;
   }
+
+  @override
+  Future<void> setMyPhoneIdentity(String phoneE164) async {}
+
+  @override
+  Future<List<RegisteredUser>> fetchRegisteredUsers() async => const [];
 }

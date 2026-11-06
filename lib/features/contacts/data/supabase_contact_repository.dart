@@ -2,6 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../domain/contact_repository.dart';
 import '../domain/contact.dart';
+import '../domain/registered_user.dart';
 
 class SupabaseContactRepository implements ContactRepository {
   const SupabaseContactRepository(this._client);
@@ -30,5 +31,26 @@ class SupabaseContactRepository implements ContactRepository {
         'target_phone_e164': phoneE164,
       },
     );
+  }
+
+  @override
+  Future<void> setMyPhoneIdentity(String phoneE164) async {
+    await _client.rpc(
+      'set_my_phone_identity',
+      params: {'target_phone_e164': phoneE164},
+    );
+  }
+
+  @override
+  Future<List<RegisteredUser>> fetchRegisteredUsers() async {
+    final currentUserId = _client.auth.currentUser?.id;
+    var query = _client.from('profiles').select('id, display_name, username');
+    if (currentUserId != null) {
+      query = query.neq('id', currentUserId);
+    }
+    final rows = await query.order('display_name');
+    return (rows as List)
+        .map((row) => RegisteredUser.fromRow(Map<String, dynamic>.from(row)))
+        .toList(growable: false);
   }
 }
