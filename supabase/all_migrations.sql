@@ -1,13 +1,34 @@
--- Relay initial schema. Run with the Supabase CLI or the SQL Editor.
+-- Relay full schema and RPC functions (Idempotent: safe to run multiple times)
 create extension if not exists pgcrypto;
 
-create type public.message_type as enum ('text', 'image', 'video', 'audio', 'document', 'system');
-create type public.member_role as enum ('member', 'admin', 'owner');
-create type public.receipt_status as enum ('delivered', 'read');
-create type public.call_type as enum ('voice', 'video');
-create type public.call_status as enum ('ringing', 'accepted', 'rejected', 'missed', 'ended', 'failed');
+-- Enums (ignore error if they already exist)
+do $$ begin
+  create type public.message_type as enum ('text', 'image', 'video', 'audio', 'document', 'system');
+exception when duplicate_object then null;
+end $$;
 
-create table public.profiles (
+do $$ begin
+  create type public.member_role as enum ('member', 'admin', 'owner');
+exception when duplicate_object then null;
+end $$;
+
+do $$ begin
+  create type public.receipt_status as enum ('delivered', 'read');
+exception when duplicate_object then null;
+end $$;
+
+do $$ begin
+  create type public.call_type as enum ('voice', 'video');
+exception when duplicate_object then null;
+end $$;
+
+do $$ begin
+  create type public.call_status as enum ('ringing', 'accepted', 'rejected', 'missed', 'ended', 'failed');
+exception when duplicate_object then null;
+end $$;
+
+-- Core Tables
+create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   username text unique check (username ~ '^[a-z0-9_]{3,32}$'),
   display_name text not null default '' check (char_length(display_name) <= 80),
@@ -18,7 +39,7 @@ create table public.profiles (
   updated_at timestamptz not null default now()
 );
 
-create table public.conversations (
+create table if not exists public.conversations (
   id uuid primary key default gen_random_uuid(),
   is_group boolean not null default false,
   created_by uuid not null references public.profiles(id) on delete restrict,
@@ -26,7 +47,7 @@ create table public.conversations (
   updated_at timestamptz not null default now()
 );
 
-create table public.conversation_members (
+create table if not exists public.conversation_members (
   conversation_id uuid not null references public.conversations(id) on delete cascade,
   user_id uuid not null references public.profiles(id) on delete cascade,
   role public.member_role not null default 'member',
@@ -35,7 +56,7 @@ create table public.conversation_members (
   primary key (conversation_id, user_id)
 );
 
-create table public.messages (
+create table if not exists public.messages (
   id uuid primary key default gen_random_uuid(),
   conversation_id uuid not null references public.conversations(id) on delete cascade,
   sender_id uuid not null references public.profiles(id) on delete restrict,
@@ -48,7 +69,7 @@ create table public.messages (
   check ((type <> 'text') or char_length(trim(content)) > 0)
 );
 
-create table public.message_receipts (
+create table if not exists public.message_receipts (
   message_id uuid not null references public.messages(id) on delete cascade,
   user_id uuid not null references public.profiles(id) on delete cascade,
   status public.receipt_status not null,
@@ -56,7 +77,7 @@ create table public.message_receipts (
   primary key (message_id, user_id, status)
 );
 
-create table public.message_reactions (
+create table if not exists public.message_reactions (
   message_id uuid not null references public.messages(id) on delete cascade,
   user_id uuid not null references public.profiles(id) on delete cascade,
   emoji text not null check (char_length(emoji) between 1 and 16),
@@ -64,7 +85,7 @@ create table public.message_reactions (
   primary key (message_id, user_id, emoji)
 );
 
-create table public.attachments (
+create table if not exists public.attachments (
   id uuid primary key default gen_random_uuid(),
   message_id uuid not null references public.messages(id) on delete cascade,
   storage_path text not null unique,
@@ -74,21 +95,21 @@ create table public.attachments (
   created_at timestamptz not null default now()
 );
 
-create table public.groups (
+create table if not exists public.groups (
   conversation_id uuid primary key references public.conversations(id) on delete cascade,
   name text not null check (char_length(name) between 1 and 100),
   avatar_path text,
   created_at timestamptz not null default now()
 );
 
-create table public.group_members (
+create table if not exists public.group_members (
   conversation_id uuid not null references public.groups(conversation_id) on delete cascade,
   user_id uuid not null references public.profiles(id) on delete cascade,
   role public.member_role not null default 'member',
   primary key (conversation_id, user_id)
 );
 
-create table public.calls (
+create table if not exists public.calls (
   id uuid primary key default gen_random_uuid(),
   caller_id uuid not null references public.profiles(id) on delete restrict,
   receiver_id uuid not null references public.profiles(id) on delete restrict,
@@ -100,7 +121,7 @@ create table public.calls (
   check (caller_id <> receiver_id)
 );
 
-create table public.blocked_users (
+create table if not exists public.blocked_users (
   blocker_id uuid not null references public.profiles(id) on delete cascade,
   blocked_id uuid not null references public.profiles(id) on delete cascade,
   created_at timestamptz not null default now(),
@@ -108,7 +129,7 @@ create table public.blocked_users (
   check (blocker_id <> blocked_id)
 );
 
-create table public.user_devices (
+create table if not exists public.user_devices (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id) on delete cascade,
   token text not null unique,
@@ -116,7 +137,7 @@ create table public.user_devices (
   updated_at timestamptz not null default now()
 );
 
-create table public.notifications (
+create table if not exists public.notifications (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id) on delete cascade,
   type text not null,
@@ -127,80 +148,67 @@ create table public.notifications (
   created_at timestamptz not null default now()
 );
 
-create index messages_conversation_created_at_idx on public.messages (conversation_id, created_at desc) where deleted_at is null;
-create index conversation_members_user_id_idx on public.conversation_members (user_id, conversation_id);
-create index message_receipts_user_id_idx on public.message_receipts (user_id, message_id);
-create index notifications_user_created_at_idx on public.notifications (user_id, created_at desc);
-create index calls_participants_started_at_idx on public.calls (caller_id, receiver_id, started_at desc);
+create table if not exists public.phone_identities (
+  user_id uuid primary key references public.profiles(id) on delete cascade,
+  phone_e164 text not null unique check (phone_e164 ~ '^\\+[1-9][0-9]{7,14}$'),
+  verified_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
 
-create function public.conversation_member(target_conversation_id uuid, target_user_id uuid default auth.uid())
+create table if not exists public.contacts (
+  id uuid primary key default gen_random_uuid(),
+  owner_id uuid not null references public.profiles(id) on delete cascade,
+  display_name text not null check (char_length(trim(display_name)) between 1 and 80),
+  phone_e164 text not null check (phone_e164 ~ '^\\+[1-9][0-9]{7,14}$'),
+  registered_user_id uuid references public.profiles(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (owner_id, phone_e164)
+);
+
+-- Indexes
+create index if not exists messages_conversation_created_at_idx on public.messages (conversation_id, created_at desc) where deleted_at is null;
+create index if not exists conversation_members_user_id_idx on public.conversation_members (user_id, conversation_id);
+create index if not exists message_receipts_user_id_idx on public.message_receipts (user_id, message_id);
+create index if not exists notifications_user_created_at_idx on public.notifications (user_id, created_at desc);
+create index if not exists calls_participants_started_at_idx on public.calls (caller_id, receiver_id, started_at desc);
+
+-- Helper functions
+create or replace function public.conversation_member(target_conversation_id uuid, target_user_id uuid default auth.uid())
 returns boolean language sql stable security definer set search_path = public as $$
   select exists (select 1 from public.conversation_members where conversation_id = target_conversation_id and user_id = target_user_id);
 $$;
 
-create function public.conversation_admin(target_conversation_id uuid, target_user_id uuid default auth.uid())
+create or replace function public.conversation_admin(target_conversation_id uuid, target_user_id uuid default auth.uid())
 returns boolean language sql stable security definer set search_path = public as $$
   select exists (select 1 from public.conversation_members where conversation_id = target_conversation_id and user_id = target_user_id and role in ('admin', 'owner'));
 $$;
 
-create function public.user_blocked(target_user_id uuid, other_user_id uuid)
+create or replace function public.user_blocked(target_user_id uuid, other_user_id uuid)
 returns boolean language sql stable security definer set search_path = public as $$
   select exists (select 1 from public.blocked_users where blocker_id = target_user_id and blocked_id = other_user_id);
 $$;
 
-create function public.set_updated_at() returns trigger language plpgsql as $$ begin new.updated_at = now(); return new; end; $$;
+create or replace function public.set_updated_at() returns trigger language plpgsql as $$ begin new.updated_at = now(); return new; end; $$;
+
+-- Triggers
+drop trigger if exists profiles_updated_at on public.profiles;
 create trigger profiles_updated_at before update on public.profiles for each row execute function public.set_updated_at();
+
+drop trigger if exists conversations_updated_at on public.conversations;
 create trigger conversations_updated_at before update on public.conversations for each row execute function public.set_updated_at();
+
+drop trigger if exists messages_updated_at on public.messages;
 create trigger messages_updated_at before update on public.messages for each row execute function public.set_updated_at();
 
-alter table public.profiles enable row level security;
-alter table public.conversations enable row level security;
-alter table public.conversation_members enable row level security;
-alter table public.messages enable row level security;
-alter table public.message_receipts enable row level security;
-alter table public.message_reactions enable row level security;
-alter table public.attachments enable row level security;
-alter table public.groups enable row level security;
-alter table public.group_members enable row level security;
-alter table public.calls enable row level security;
-alter table public.blocked_users enable row level security;
-alter table public.user_devices enable row level security;
-alter table public.notifications enable row level security;
+drop trigger if exists phone_identities_updated_at on public.phone_identities;
+create trigger phone_identities_updated_at before update on public.phone_identities for each row execute function public.set_updated_at();
 
-create policy "profiles readable by authenticated users" on public.profiles for select to authenticated using (true);
-create policy "profiles self update" on public.profiles for update to authenticated using (id = auth.uid()) with check (id = auth.uid());
-create policy "profiles self insert" on public.profiles for insert to authenticated with check (id = auth.uid());
-create policy "members read conversations" on public.conversations for select to authenticated using (public.conversation_member(id));
-create policy "members read membership" on public.conversation_members for select to authenticated using (public.conversation_member(conversation_id));
-create policy "members read messages" on public.messages for select to authenticated using (public.conversation_member(conversation_id));
-create policy "members send messages" on public.messages for insert to authenticated with check (
-  sender_id = auth.uid()
-  and public.conversation_member(conversation_id)
-  and not exists (
-    select 1 from public.conversation_members cm
-    where cm.conversation_id = messages.conversation_id
-      and cm.user_id <> auth.uid()
-      and public.user_blocked(cm.user_id, auth.uid())
-  )
-);
-create policy "senders edit own messages" on public.messages for update to authenticated using (sender_id = auth.uid() and public.conversation_member(conversation_id)) with check (sender_id = auth.uid() and public.conversation_member(conversation_id));
-create policy "members read receipts" on public.message_receipts for select to authenticated using (exists (select 1 from public.messages m where m.id = message_id and public.conversation_member(m.conversation_id)));
-create policy "users write own receipts" on public.message_receipts for insert to authenticated with check (user_id = auth.uid());
-create policy "members read reactions" on public.message_reactions for select to authenticated using (exists (select 1 from public.messages m where m.id = message_id and public.conversation_member(m.conversation_id)));
-create policy "users manage own reactions" on public.message_reactions for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
-create policy "members read attachments" on public.attachments for select to authenticated using (exists (select 1 from public.messages m where m.id = message_id and public.conversation_member(m.conversation_id)));
-create policy "members read groups" on public.groups for select to authenticated using (public.conversation_member(conversation_id));
-create policy "admins update groups" on public.groups for update to authenticated using (public.conversation_admin(conversation_id)) with check (public.conversation_admin(conversation_id));
-create policy "members read group members" on public.group_members for select to authenticated using (public.conversation_member(conversation_id));
-create policy "admins manage group members" on public.group_members for all to authenticated using (public.conversation_admin(conversation_id)) with check (public.conversation_admin(conversation_id));
-create policy "call participants read calls" on public.calls for select to authenticated using (caller_id = auth.uid() or receiver_id = auth.uid());
-create policy "caller starts calls" on public.calls for insert to authenticated with check (caller_id = auth.uid() and not public.user_blocked(receiver_id, caller_id));
-create policy "participants update calls" on public.calls for update to authenticated using (caller_id = auth.uid() or receiver_id = auth.uid()) with check (caller_id = auth.uid() or receiver_id = auth.uid());
-create policy "users manage own blocks" on public.blocked_users for all to authenticated using (blocker_id = auth.uid()) with check (blocker_id = auth.uid());
-create policy "users manage own devices" on public.user_devices for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
-create policy "users read own notifications" on public.notifications for select to authenticated using (user_id = auth.uid());
-create policy "users update own notifications" on public.notifications for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
--- Create a public profile automatically for every Supabase Auth user.
+drop trigger if exists contacts_updated_at on public.contacts;
+create trigger contacts_updated_at before update on public.contacts for each row execute function public.set_updated_at();
+
+-- Auto-provision profile on Auth sign-up
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -222,42 +230,111 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
--- Private phone identities and owner-only contacts for CHAT APP.
--- Phone numbers are not stored on public.profiles because profiles are readable.
 
-create table public.phone_identities (
-  user_id uuid primary key references public.profiles(id) on delete cascade,
-  phone_e164 text not null unique check (phone_e164 ~ '^\\+[1-9][0-9]{7,14}$'),
-  verified_at timestamptz,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create table public.contacts (
-  id uuid primary key default gen_random_uuid(),
-  owner_id uuid not null references public.profiles(id) on delete cascade,
-  display_name text not null check (char_length(trim(display_name)) between 1 and 80),
-  phone_e164 text not null check (phone_e164 ~ '^\\+[1-9][0-9]{7,14}$'),
-  registered_user_id uuid references public.profiles(id) on delete set null,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique (owner_id, phone_e164)
-);
-
-create trigger phone_identities_updated_at before update on public.phone_identities
-for each row execute function public.set_updated_at();
-create trigger contacts_updated_at before update on public.contacts
-for each row execute function public.set_updated_at();
-
+-- Enable Row Level Security
+alter table public.profiles enable row level security;
+alter table public.conversations enable row level security;
+alter table public.conversation_members enable row level security;
+alter table public.messages enable row level security;
+alter table public.message_receipts enable row level security;
+alter table public.message_reactions enable row level security;
+alter table public.attachments enable row level security;
+alter table public.groups enable row level security;
+alter table public.group_members enable row level security;
+alter table public.calls enable row level security;
+alter table public.blocked_users enable row level security;
+alter table public.user_devices enable row level security;
+alter table public.notifications enable row level security;
 alter table public.phone_identities enable row level security;
 alter table public.contacts enable row level security;
 
-create policy "users manage own phone identity" on public.phone_identities for all to authenticated
-using (user_id = auth.uid()) with check (user_id = auth.uid());
-create policy "owners manage own contacts" on public.contacts for all to authenticated
-using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+-- Policies (Safe drop & re-create)
+drop policy if exists "profiles readable by authenticated users" on public.profiles;
+create policy "profiles readable by authenticated users" on public.profiles for select to authenticated using (true);
 
-create function public.set_my_phone_identity(target_phone_e164 text)
+drop policy if exists "profiles self update" on public.profiles;
+create policy "profiles self update" on public.profiles for update to authenticated using (id = auth.uid()) with check (id = auth.uid());
+
+drop policy if exists "profiles self insert" on public.profiles;
+create policy "profiles self insert" on public.profiles for insert to authenticated with check (id = auth.uid());
+
+drop policy if exists "members read conversations" on public.conversations;
+create policy "members read conversations" on public.conversations for select to authenticated using (public.conversation_member(id));
+
+drop policy if exists "members read membership" on public.conversation_members;
+create policy "members read membership" on public.conversation_members for select to authenticated using (public.conversation_member(conversation_id));
+
+drop policy if exists "members read messages" on public.messages;
+create policy "members read messages" on public.messages for select to authenticated using (public.conversation_member(conversation_id));
+
+drop policy if exists "members send messages" on public.messages;
+create policy "members send messages" on public.messages for insert to authenticated with check (
+  sender_id = auth.uid()
+  and public.conversation_member(conversation_id)
+  and not exists (
+    select 1 from public.conversation_members cm
+    where cm.conversation_id = messages.conversation_id
+      and cm.user_id <> auth.uid()
+      and public.user_blocked(cm.user_id, auth.uid())
+  )
+);
+
+drop policy if exists "senders edit own messages" on public.messages;
+create policy "senders edit own messages" on public.messages for update to authenticated using (sender_id = auth.uid() and public.conversation_member(conversation_id)) with check (sender_id = auth.uid() and public.conversation_member(conversation_id));
+
+drop policy if exists "members read receipts" on public.message_receipts;
+create policy "members read receipts" on public.message_receipts for select to authenticated using (exists (select 1 from public.messages m where m.id = message_id and public.conversation_member(m.conversation_id)));
+
+drop policy if exists "users write own receipts" on public.message_receipts;
+create policy "users write own receipts" on public.message_receipts for insert to authenticated with check (user_id = auth.uid());
+
+drop policy if exists "members read reactions" on public.message_reactions;
+create policy "members read reactions" on public.message_reactions for select to authenticated using (exists (select 1 from public.messages m where m.id = message_id and public.conversation_member(m.conversation_id)));
+
+drop policy if exists "users manage own reactions" on public.message_reactions;
+create policy "users manage own reactions" on public.message_reactions for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "members read attachments" on public.attachments;
+create policy "members read attachments" on public.attachments for select to authenticated using (exists (select 1 from public.messages m where m.id = message_id and public.conversation_member(m.conversation_id)));
+
+drop policy if exists "members read groups" on public.groups;
+create policy "members read groups" on public.groups for select to authenticated using (public.conversation_member(conversation_id));
+
+drop policy if exists "admins update groups" on public.groups;
+create policy "admins update groups" on public.groups for update to authenticated using (public.conversation_admin(conversation_id)) with check (public.conversation_admin(conversation_id));
+
+drop policy if exists "members read group members" on public.group_members;
+drop policy if exists "admins manage group members" on public.group_members;
+
+drop policy if exists "call participants read calls" on public.calls;
+create policy "call participants read calls" on public.calls for select to authenticated using (caller_id = auth.uid() or receiver_id = auth.uid());
+
+drop policy if exists "caller starts calls" on public.calls;
+create policy "caller starts calls" on public.calls for insert to authenticated with check (caller_id = auth.uid() and not public.user_blocked(receiver_id, caller_id));
+
+drop policy if exists "participants update calls" on public.calls;
+create policy "participants update calls" on public.calls for update to authenticated using (caller_id = auth.uid() or receiver_id = auth.uid()) with check (caller_id = auth.uid() or receiver_id = auth.uid());
+
+drop policy if exists "users manage own blocks" on public.blocked_users;
+create policy "users manage own blocks" on public.blocked_users for all to authenticated using (blocker_id = auth.uid()) with check (blocker_id = auth.uid());
+
+drop policy if exists "users manage own devices" on public.user_devices;
+create policy "users manage own devices" on public.user_devices for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "users read own notifications" on public.notifications;
+create policy "users read own notifications" on public.notifications for select to authenticated using (user_id = auth.uid());
+
+drop policy if exists "users update own notifications" on public.notifications;
+create policy "users update own notifications" on public.notifications for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "users manage own phone identity" on public.phone_identities;
+create policy "users manage own phone identity" on public.phone_identities for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+drop policy if exists "owners manage own contacts" on public.contacts;
+create policy "owners manage own contacts" on public.contacts for all to authenticated using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+
+-- RPC Functions: Contacts
+create or replace function public.set_my_phone_identity(target_phone_e164 text)
 returns public.phone_identities language plpgsql security definer set search_path = public as $$
 declare saved_identity public.phone_identities;
 begin
@@ -271,7 +348,7 @@ exception when unique_violation then raise exception 'That phone number is alrea
 end;
 $$;
 
-create function public.save_contact(target_display_name text, target_phone_e164 text)
+create or replace function public.save_contact(target_display_name text, target_phone_e164 text)
 returns public.contacts language plpgsql security definer set search_path = public as $$
 declare saved_contact public.contacts; matched_user_id uuid;
 begin
@@ -291,14 +368,9 @@ revoke all on function public.set_my_phone_identity(text) from public;
 revoke all on function public.save_contact(text, text) from public;
 grant execute on function public.set_my_phone_identity(text) to authenticated;
 grant execute on function public.save_contact(text, text) to authenticated;
--- CHAT APP Phase 1: private conversations, groups, and member-only summaries.
--- All privileged changes go through the RPC functions below. The Flutter app
--- must never insert/update conversation_members directly.
 
-drop policy if exists "members read group members" on public.group_members;
-drop policy if exists "admins manage group members" on public.group_members;
-
-create function public.get_or_create_direct_conversation(target_user_id uuid)
+-- RPC Functions: Conversations & Groups
+create or replace function public.get_or_create_direct_conversation(target_user_id uuid)
 returns uuid
 language plpgsql
 security definer
@@ -344,7 +416,7 @@ begin
 end;
 $$;
 
-create function public.create_group_conversation(
+create or replace function public.create_group_conversation(
   group_name text,
   member_ids uuid[]
 )
@@ -411,7 +483,7 @@ begin
 end;
 $$;
 
-create function public.add_group_member(
+create or replace function public.add_group_member(
   target_conversation_id uuid,
   target_user_id uuid
 )
@@ -445,7 +517,7 @@ begin
 end;
 $$;
 
-create function public.remove_group_member(
+create or replace function public.remove_group_member(
   target_conversation_id uuid,
   target_user_id uuid
 )
@@ -486,7 +558,7 @@ begin
       and user_id <> target_user_id
       and role = 'owner'
   ) then
-    raise exception 'A group must keep at least one owner.'; -- last owner
+    raise exception 'A group must keep at least one owner.';
   end if;
 
   delete from public.conversation_members
@@ -494,7 +566,7 @@ begin
 end;
 $$;
 
-create function public.set_group_member_role(
+create or replace function public.set_group_member_role(
   target_conversation_id uuid,
   target_user_id uuid,
   target_role public.member_role
@@ -532,7 +604,7 @@ begin
 end;
 $$;
 
-create function public.mark_conversation_read(target_conversation_id uuid)
+create or replace function public.mark_conversation_read(target_conversation_id uuid)
 returns void
 language plpgsql
 security definer
@@ -547,7 +619,7 @@ begin
 end;
 $$;
 
-create function public.get_conversation_summaries()
+create or replace function public.get_conversation_summaries()
 returns table (
   conversation_id uuid,
   is_group boolean,
