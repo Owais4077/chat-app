@@ -1,19 +1,34 @@
 # Supabase database
 
-## Private and group chat
+## Migration Order & Application
 
-After the profile, messaging, and phone-contact migrations, apply
-`migrations/202610220002_private_and_group_chat.sql`. In the Dashboard,
-open **SQL Editor**, create a new query, paste the complete migration, then
-choose **Run**. The expected response is **Success. No rows returned**.
+Apply migrations in chronological order using the Supabase CLI (`supabase db push`) or by pasting each SQL script into the Dashboard **SQL Editor**:
 
-This migration creates secure RPC functions for private conversations, groups,
-member roles, read state, and conversation summaries. Do not create or modify
-conversation membership rows directly from the mobile app. In **Database →
-Replication**, enable Realtime for `conversation_members` and `messages`.
+1. `migrations/202610200001_initial_messaging_schema.sql`: Core tables (`profiles`, `conversations`, `conversation_members`, `messages`, `groups`) and initial Row Level Security (RLS) policies.
+2. `migrations/202610210001_create_profile_on_signup.sql`: Automated profile provisioning trigger upon auth user sign-up.
+3. `migrations/202610220001_phone_contacts.sql`: E.164 phone identity verification and owner-only contacts storage.
+4. `migrations/202610220002_private_and_group_chat.sql`: Security-definer RPC functions for direct and group conversations, member management, read receipts, and member-only conversation summaries.
 
-## Phone contacts
+When executing each migration in the Supabase Dashboard SQL Editor, verify that the operation completes with:
+`Success. No rows returned`.
 
-Apply `migrations/202610220001_phone_contacts.sql` after the messaging and profile migrations. It adds private phone identities and owner-only contacts. Phone verification is test-mode only until an SMS provider is configured.
+## Realtime Configuration
 
-Apply migrations with the Supabase CLI (`supabase link` then `supabase db push`) or paste the migration into the Dashboard SQL Editor. Use the project’s publishable key in mobile clients; never use a secret/service key there. The database password is required only for direct PostgreSQL administration and must be stored in a secret manager, not this repository.
+In the Supabase Dashboard under **Database → Replication**:
+- Enable Realtime replication for `public.conversation_members`.
+- Enable Realtime replication for `public.messages`.
+
+This ensures chat lists, unread counters, and conversation screens update reactively as events occur.
+
+## Security Boundaries & RPC Functions
+
+All privileged conversation actions must be executed through database RPCs:
+- `get_or_create_direct_conversation(target_user_id uuid)`: Prevents self-chats, verifies user availability and block status, and returns a unique 1-to-1 conversation ID.
+- `create_group_conversation(group_name text, member_ids uuid[])`: Validates group name, sets caller as owner, inserts valid members, and returns the group conversation ID.
+- `add_group_member(target_conversation_id uuid, target_user_id uuid)`: Restricted to owners and administrators.
+- `remove_group_member(target_conversation_id uuid, target_user_id uuid)`: Enforces last-owner preservation and prevents administrators from removing other admins or owners.
+- `set_group_member_role(target_conversation_id uuid, target_user_id uuid, target_role member_role)`: Restricted to group owners only.
+- `mark_conversation_read(target_conversation_id uuid)`: Updates caller's `last_read_at` timestamp.
+- `get_conversation_summaries()`: Invoker RPC generating safe titles, unread counts, and last message previews for the authenticated user only.
+
+Never use the service role key or database password in the mobile client. Only distribute the public publishable anon key.

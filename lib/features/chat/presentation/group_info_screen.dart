@@ -184,7 +184,6 @@ class _GroupInfoScreenState extends ConsumerState<GroupInfoScreen> {
                     separatorBuilder: (_, _) => const Divider(height: 1),
                     itemBuilder: (context, index) {
                       final member = _members[index];
-                      final isSelf = false;
                       final canRemove =
                           (isOwner && member.role != GroupMemberRole.owner) ||
                           (widget.myRole == GroupMemberRole.admin &&

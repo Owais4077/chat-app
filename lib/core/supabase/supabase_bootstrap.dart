@@ -2,10 +2,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/app_config.dart';
 
-typedef SupabaseInitializer = Future<void> Function({
-  required String url,
-  required String anonKey,
-});
+typedef SupabaseInitializer =
+    Future<void> Function({required String url, required String anonKey});
 
 abstract final class SupabaseBootstrap {
   static Future<bool> initialize(

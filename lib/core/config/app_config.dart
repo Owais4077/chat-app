@@ -13,10 +13,13 @@ class AppConfig {
 
   bool get isSupabaseConfigured {
     final url = Uri.tryParse(supabaseUrl ?? '');
-    return url != null && url.isScheme('https') && (supabaseAnonKey?.isNotEmpty ?? false);
+    return url != null &&
+        url.isScheme('https') &&
+        (supabaseAnonKey?.isNotEmpty ?? false);
   }
 
-  factory AppConfig.fromEnvironment(Map<String, String> environment) => AppConfig(
+  factory AppConfig.fromEnvironment(Map<String, String> environment) =>
+      AppConfig(
         supabaseUrl: environment['SUPABASE_URL'],
         supabaseAnonKey: environment['SUPABASE_ANON_KEY'],
         turnUrl: environment['TURN_URL'],

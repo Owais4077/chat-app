@@ -4,11 +4,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:relay_messenger/main.dart';
 
 void main() {
-  testWidgets('application renders a MaterialApp from the root widget',
-      (tester) async {
+  testWidgets('application renders a MaterialApp from the root widget', (
+    tester,
+  ) async {
     await tester.pumpWidget(const ProviderScope(child: RelayApp()));
 
     expect(find.byType(MaterialApp), findsOneWidget);
-    expect(tester.widget<MaterialApp>(find.byType(MaterialApp)).title, 'CHAT APP');
+    expect(
+      tester.widget<MaterialApp>(find.byType(MaterialApp)).title,
+      'CHAT APP',
+    );
   });
 }
