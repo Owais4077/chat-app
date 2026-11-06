@@ -5,6 +5,8 @@ import '../../features/auth/presentation/auth_providers.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/chat/presentation/chat_list_screen.dart';
+import '../../features/chat/presentation/conversation_screen.dart';
+import '../../features/chat/presentation/create_group_screen.dart';
 import '../../features/contacts/presentation/contacts_screen.dart';
 import '../../shared/widgets/feature_screen.dart';
 import 'route_paths.dart';
@@ -86,6 +88,17 @@ GoRouter createAppRouter(AppAccess access) => GoRouter(
     GoRoute(
       path: RoutePaths.newConversation,
       builder: (_, _) => const FeatureScreen(title: 'New conversation'),
+    ),
+    GoRoute(
+      path: RoutePaths.newGroup,
+      builder: (_, _) => const CreateGroupScreen(),
+    ),
+    GoRoute(
+      path: RoutePaths.conversationDetail,
+      builder: (_, state) {
+        final conversationId = state.pathParameters['conversationId'] ?? '';
+        return ConversationScreen(conversationId: conversationId);
+      },
     ),
     GoRoute(
       path: RoutePaths.conversation,

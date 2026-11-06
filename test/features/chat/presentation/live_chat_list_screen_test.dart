@@ -64,7 +64,21 @@ class _FakeChatRepository implements ChatRepository {
 
   @override
   Stream<List<ConversationSummary>> watchConversationSummaries() =>
-      const Stream.empty();
+      Stream.value(
+        conversations
+            .map(
+              (c) => ConversationSummary(
+                id: c.id,
+                isGroup: false,
+                title: c.title,
+                lastMessagePreview: '',
+                lastMessageAt: null,
+                unreadCount: 0,
+                myRole: GroupMemberRole.member,
+              ),
+            )
+            .toList(),
+      );
 
   @override
   Stream<List<ChatMessage>> watchMessages(String conversationId) =>

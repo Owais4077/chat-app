@@ -13,10 +13,15 @@ abstract final class RoutePaths {
   static const settings = '/settings';
   static const search = '/search';
   static const newConversation = '/new-conversation';
+  static const newGroup = '/groups/new';
   static const conversation = '/conversation';
+  static const conversationDetail = '/conversation/:conversationId';
   static const notificationSettings = '/settings/notifications';
   static const privacySettings = '/settings/privacy';
   static const accountSettings = '/settings/account';
   static const blockedUsers = '/settings/blocked-users';
   static const logout = '/logout';
+
+  static String conversationWithId(String conversationId) =>
+      '/conversation/$conversationId';
 }

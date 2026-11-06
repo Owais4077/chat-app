@@ -1,16 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../domain/chat_repository.dart';
 import 'chat_controller.dart';
+import 'chat_providers.dart';
 import 'widgets/message_bubble.dart';
 import 'widgets/message_composer.dart';
-class ConversationScreen extends StatefulWidget { const ConversationScreen({super.key, required this.repository, required this.conversationId}); final ChatRepository repository; final String conversationId; @override State<ConversationScreen> createState() => _ConversationScreenState(); }
-class _ConversationScreenState extends State<ConversationScreen> {
+
+class ConversationScreen extends ConsumerStatefulWidget {
+  const ConversationScreen({
+    super.key,
+    this.repository,
+    required this.conversationId,
+  });
+
+  final ChatRepository? repository;
+  final String conversationId;
+
+  @override
+  ConsumerState<ConversationScreen> createState() => _ConversationScreenState();
+}
+
+class _ConversationScreenState extends ConsumerState<ConversationScreen> {
   late final ChatController controller;
 
   @override
   void initState() {
     super.initState();
-    controller = ChatController(widget.repository, widget.conversationId)
+    final ChatRepository repo =
+        widget.repository ?? ref.read(chatRepositoryProvider);
+    controller = ChatController(repo, widget.conversationId)
       ..addListener(_refresh)
       ..startListening();
   }

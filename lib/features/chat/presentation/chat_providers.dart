@@ -5,15 +5,19 @@ import '../../../core/config/config_providers.dart';
 import '../data/mock_chat_repository.dart';
 import '../data/supabase_chat_repository.dart';
 import '../domain/chat_repository.dart';
-import '../domain/conversation.dart';
+import '../domain/conversation_summary.dart';
 
 final chatRepositoryProvider = Provider<ChatRepository>((ref) {
   if (!ref.watch(appConfigProvider).isSupabaseConfigured) {
     return MockChatRepository();
   }
-  return SupabaseChatRepository(SupabaseChatDataSource(Supabase.instance.client));
+  return SupabaseChatRepository(
+    SupabaseChatDataSource(Supabase.instance.client),
+  );
 });
 
-final chatConversationsProvider = StreamProvider<List<Conversation>>((ref) {
-  return ref.watch(chatRepositoryProvider).watchConversations();
+final chatConversationsProvider = StreamProvider<List<ConversationSummary>>((
+  ref,
+) {
+  return ref.watch(chatRepositoryProvider).watchConversationSummaries();
 });

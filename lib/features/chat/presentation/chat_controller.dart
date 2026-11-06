@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import '../../../core/errors/app_failure.dart';
 import '../domain/chat_message.dart';
 import '../domain/chat_repository.dart';
+
 class ChatController extends ChangeNotifier {
   ChatController(this._repository, this.conversationId);
 
@@ -15,19 +16,21 @@ class ChatController extends ChangeNotifier {
 
   void startListening() {
     _messageSubscription?.cancel();
-    _messageSubscription = _repository.watchMessages(conversationId).listen(
-      (items) {
-        messages
-          ..clear()
-          ..addAll(items);
-        error = null;
-        notifyListeners();
-      },
-      onError: (_, _) {
-        error = const AppFailure.unknown();
-        notifyListeners();
-      },
-    );
+    _messageSubscription = _repository
+        .watchMessages(conversationId)
+        .listen(
+          (items) {
+            messages
+              ..clear()
+              ..addAll(items);
+            error = null;
+            notifyListeners();
+          },
+          onError: (_, _) {
+            error = const AppFailure.unknown();
+            notifyListeners();
+          },
+        );
   }
 
   Future<void> send(String text) async {
