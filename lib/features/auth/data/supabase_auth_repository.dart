@@ -40,7 +40,10 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> sendEmailOtp({required String email}) async {
-    await _client.auth.signInWithOtp(email: email.trim());
+    await _client.auth.signInWithOtp(
+      email: email.trim(),
+      shouldCreateUser: true,
+    );
   }
 
   @override
@@ -57,7 +60,10 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> sendPhoneOtp({required String phone}) async {
-    await _client.auth.signInWithOtp(phone: phone.trim());
+    await _client.auth.signInWithOtp(
+      phone: phone.trim(),
+      shouldCreateUser: true,
+    );
   }
 
   @override

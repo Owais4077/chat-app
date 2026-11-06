@@ -81,9 +81,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           _info = 'Verification code sent to $phone';
         });
       }
+    } on AuthException catch (e) {
+      if (mounted) {
+        setState(() => _error = e.message);
+      }
     } catch (e) {
       if (mounted) {
-        setState(() => _error = 'Could not send verification code. Check number and try again.');
+        setState(() => _error = 'Could not send verification code: $e');
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -106,9 +110,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         token: token,
       );
       if (mounted) context.go(RoutePaths.chats);
+    } on AuthException catch (e) {
+      if (mounted) {
+        setState(() => _error = e.message);
+      }
     } catch (e) {
       if (mounted) {
-        setState(() => _error = 'Invalid verification code. Please check and try again.');
+        setState(() => _error = 'Invalid verification code: $e');
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -131,12 +139,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (mounted) {
         setState(() {
           _otpSent = true;
-          _info = 'Verification code sent to $email';
+          _info = 'Verification code sent to $email. Please check your inbox and Spam folder.';
         });
+      }
+    } on AuthException catch (e) {
+      if (mounted) {
+        setState(() => _error = e.message);
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _error = 'Could not send verification code. Check your email.');
+        setState(() => _error = 'Could not send verification code: $e');
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -159,9 +171,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         token: token,
       );
       if (mounted) context.go(RoutePaths.chats);
+    } on AuthException catch (e) {
+      if (mounted) {
+        setState(() => _error = e.message);
+      }
     } catch (e) {
       if (mounted) {
-        setState(() => _error = 'Invalid verification code. Please check and try again.');
+        setState(() => _error = 'Invalid verification code: $e');
       }
     } finally {
       if (mounted) setState(() => _busy = false);
