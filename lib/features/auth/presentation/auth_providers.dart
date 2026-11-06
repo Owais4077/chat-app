@@ -7,17 +7,17 @@ import '../data/supabase_auth_repository.dart';
 import '../domain/app_user.dart';
 import '../domain/auth_repository.dart';
 
+final _defaultMockAuthRepository = MockAuthRepository();
+
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   if (!ref.watch(appConfigProvider).isSupabaseConfigured) {
-    return MockAuthRepository();
+    return _defaultMockAuthRepository;
   }
   return SupabaseAuthRepository(Supabase.instance.client);
 });
 
-final authStateProvider = StreamProvider<AppUser?>((ref) {
-  if (!ref.watch(appConfigProvider).isSupabaseConfigured) {
-    return Stream.value(null);
-  }
+final authStateProvider = StreamProvider<AppUser?>((ref) async* {
   final repository = ref.watch(authRepositoryProvider);
-  return repository.authStateChanges();
+  yield repository.currentUser();
+  yield* repository.authStateChanges();
 });

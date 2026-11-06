@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../core/router/route_paths.dart';
 import '../domain/auth_repository.dart';
 import 'auth_providers.dart';
 
@@ -57,11 +59,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           .read(authRepositoryProvider)
           .signUp(email: _email.text, password: _password.text);
       if (mounted) {
-        setState(
-          () => _message = result == SignUpResult.confirmationRequired
-              ? 'Check your email to confirm your account.'
-              : 'Account created.',
-        );
+        if (result == SignUpResult.authenticated) {
+          context.go(RoutePaths.chats);
+        } else {
+          setState(
+            () => _message = 'Check your email to confirm your account.',
+          );
+        }
       }
     } catch (error) {
       if (mounted) {
@@ -74,63 +78,70 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Create account')),
-    body: Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Text(
-                  'Create your CHAT APP account',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        appBar: AppBar(title: const Text('Create account')),
+        body: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      'Create your CHAT APP account',
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 24),
+                    TextFormField(
+                      controller: _email,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(labelText: 'Email'),
+                      validator: (v) => v == null || v.trim().isEmpty
+                          ? 'Enter your email address.'
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: _password,
+                      obscureText: true,
+                      decoration: const InputDecoration(labelText: 'Password'),
+                      validator: (v) {
+                        if (v == null || v.length < 8) {
+                          return 'Use at least 8 characters.';
+                        }
+                        if (!RegExp(r'[A-Z]').hasMatch(v) ||
+                            !RegExp(r'[a-z]').hasMatch(v) ||
+                            !RegExp(r'\d').hasMatch(v)) {
+                          return 'Use uppercase, lowercase letters, and a number.';
+                        }
+                        return null;
+                      },
+                    ),
+                    if (_message case final message?)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Text(message),
+                      ),
+                    const SizedBox(height: 20),
+                    FilledButton(
+                      onPressed: _busy ? null : _submit,
+                      child:
+                          Text(_busy ? 'Creating account…' : 'Create account'),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () => context.go(RoutePaths.login),
+                      child: const Text('Already have an account? Sign in'),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 24),
-                TextFormField(
-                  controller: _email,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                  validator: (v) => v == null || v.trim().isEmpty
-                      ? 'Enter your email address.'
-                      : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _password,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Password'),
-                  validator: (v) {
-                    if (v == null || v.length < 8) {
-                      return 'Use at least 8 characters.';
-                    }
-                    if (!RegExp(r'[A-Z]').hasMatch(v) ||
-                        !RegExp(r'[a-z]').hasMatch(v) ||
-                        !RegExp(r'\d').hasMatch(v)) {
-                      return 'Use uppercase, lowercase letters, and a number.';
-                    }
-                    return null;
-                  },
-                ),
-                if (_message case final message?)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 12),
-                    child: Text(message),
-                  ),
-                const SizedBox(height: 20),
-                FilledButton(
-                  onPressed: _busy ? null : _submit,
-                  child: Text(_busy ? 'Creating account…' : 'Create account'),
-                ),
-              ],
+              ),
             ),
           ),
         ),
-      ),
-    ),
-  );
+      );
 }
