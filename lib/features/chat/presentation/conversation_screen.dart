@@ -166,6 +166,8 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                   )
                 : ListView.builder(
                     controller: _scrollController,
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     itemCount: controller.messages.length,
                     itemBuilder: (context, index) {
