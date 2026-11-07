@@ -8,11 +8,13 @@ import '../../features/auth/presentation/auth_providers.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/register_screen.dart';
 import '../../features/chat/domain/conversation_summary.dart';
+import '../../features/chat/presentation/calls_screen.dart';
 import '../../features/chat/presentation/chat_list_screen.dart';
 import '../../features/chat/presentation/conversation_screen.dart';
 import '../../features/chat/presentation/create_group_screen.dart';
 import '../../features/chat/presentation/group_info_screen.dart';
 import '../../features/contacts/presentation/contacts_screen.dart';
+import '../../features/settings/presentation/settings_screen.dart';
 import '../../shared/widgets/feature_screen.dart';
 import 'route_paths.dart';
 
@@ -199,11 +201,11 @@ GoRouter createAppRouter(
         ),
         GoRoute(
           path: RoutePaths.calls,
-          builder: (_, _) => const FeatureScreen(title: 'Calls'),
+          builder: (_, _) => const CallsScreen(),
         ),
         GoRoute(
           path: RoutePaths.settings,
-          builder: (_, _) => const FeatureScreen(title: 'Settings'),
+          builder: (_, _) => const SettingsScreen(),
         ),
       ],
     ),
