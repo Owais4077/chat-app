@@ -690,3 +690,33 @@ grant execute on function public.remove_group_member(uuid, uuid) to authenticate
 grant execute on function public.set_group_member_role(uuid, uuid, public.member_role) to authenticated;
 grant execute on function public.mark_conversation_read(uuid) to authenticated;
 grant execute on function public.get_conversation_summaries() to authenticated;
+
+-- Realtime Publication for Live Two-Sided Chat
+do $$
+begin
+  begin
+    alter publication supabase_realtime add table public.messages;
+  exception when duplicate_object then null;
+  end;
+
+  begin
+    alter publication supabase_realtime add table public.conversations;
+  exception when duplicate_object then null;
+  end;
+
+  begin
+    alter publication supabase_realtime add table public.conversation_members;
+  exception when duplicate_object then null;
+  end;
+
+  begin
+    alter publication supabase_realtime add table public.profiles;
+  exception when duplicate_object then null;
+  end;
+end;
+$$;
+
+alter table public.messages replica identity full;
+alter table public.conversations replica identity full;
+alter table public.conversation_members replica identity full;
+alter table public.profiles replica identity full;
