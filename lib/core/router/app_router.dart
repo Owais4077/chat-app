@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -40,26 +42,52 @@ String? redirectFor(AppAccess access, String location) {
   return null;
 }
 
+class AuthRouterNotifier extends ChangeNotifier {
+  AuthRouterNotifier(AuthRepository authRepo) {
+    _subscription = authRepo.authStateChanges().listen((_) {
+      notifyListeners();
+    });
+  }
+
+  StreamSubscription<dynamic>? _subscription;
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
+  }
+}
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authRepo = ref.watch(authRepositoryProvider);
-  final auth = ref.watch(authStateProvider);
-  final access = switch (auth) {
-    AsyncLoading() => AppAccess.loading,
-    AsyncError() => AppAccess.unauthenticated,
-    AsyncData(value: final user) when user == null => AppAccess.unauthenticated,
-    AsyncData() => AppAccess.authenticated,
-  };
-  return createAppRouter(access, authRepo);
+  final notifier = AuthRouterNotifier(authRepo);
+  ref.onDispose(notifier.dispose);
+
+  final initialAccess = authRepo.currentUser() != null
+      ? AppAccess.authenticated
+      : AppAccess.unauthenticated;
+
+  return createAppRouter(
+    initialAccess,
+    authRepo,
+    notifier,
+  );
 });
 
-GoRouter createAppRouter(AppAccess access, [AuthRepository? authRepo]) => GoRouter(
-  initialLocation: RoutePaths.chats,
-  redirect: (context, state) {
-    final effectiveAccess = (authRepo?.currentUser() != null)
-        ? AppAccess.authenticated
-        : access;
-    return redirectFor(effectiveAccess, state.uri.path);
-  },
+GoRouter createAppRouter(
+  AppAccess access, [
+  AuthRepository? authRepo,
+  Listenable? refreshListenable,
+]) =>
+    GoRouter(
+      initialLocation: RoutePaths.chats,
+      refreshListenable: refreshListenable,
+      redirect: (context, state) {
+        final effectiveAccess = (authRepo?.currentUser() != null)
+            ? AppAccess.authenticated
+            : access;
+        return redirectFor(effectiveAccess, state.uri.path);
+      },
   routes: [
     GoRoute(
       path: RoutePaths.splash,

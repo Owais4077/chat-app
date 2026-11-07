@@ -59,6 +59,28 @@ class ChatController extends ChangeNotifier {
     }
   }
 
+  Future<void> sendMedia({
+    required String mediaUrl,
+    required MessageType type,
+  }) async {
+    try {
+      final message = await _repository.sendMediaMessage(
+        conversationId: conversationId,
+        mediaUrl: mediaUrl,
+        type: type,
+      );
+      if (!messages.any((existing) => existing.id == message.id)) {
+        messages.add(message);
+      }
+      sendError = null;
+      notifyListeners();
+    } catch (e) {
+      final message = e is PostgrestException ? e.message : e.toString();
+      sendError = AppFailure.unknown(message);
+      notifyListeners();
+    }
+  }
+
   @override
   void dispose() {
     _messageSubscription?.cancel();

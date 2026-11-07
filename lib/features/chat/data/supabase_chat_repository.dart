@@ -19,6 +19,11 @@ abstract interface class ChatDataSource {
     required String conversationId,
     required String text,
   });
+  Future<Map<String, dynamic>> insertMediaMessage({
+    required String conversationId,
+    required String mediaUrl,
+    required String type,
+  });
   Future<List<Map<String, dynamic>>> fetchGroupMembers(String conversationId);
   Future<void> addGroupMember({
     required String conversationId,
@@ -84,6 +89,20 @@ class SupabaseChatRepository implements ChatRepository {
     final row = await _source.insertTextMessage(
       conversationId: conversationId,
       text: normalized,
+    );
+    return ChatMessage.fromSupabaseRow(row);
+  }
+
+  @override
+  Future<ChatMessage> sendMediaMessage({
+    required String conversationId,
+    required String mediaUrl,
+    required MessageType type,
+  }) async {
+    final row = await _source.insertMediaMessage(
+      conversationId: conversationId,
+      mediaUrl: mediaUrl,
+      type: type.name,
     );
     return ChatMessage.fromSupabaseRow(row);
   }
@@ -215,6 +234,27 @@ class SupabaseChatDataSource implements ChatDataSource {
           'conversation_id': conversationId,
           'sender_id': userId,
           'content': text,
+        })
+        .select()
+        .single();
+    return Map<String, dynamic>.from(row);
+  }
+
+  @override
+  Future<Map<String, dynamic>> insertMediaMessage({
+    required String conversationId,
+    required String mediaUrl,
+    required String type,
+  }) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw StateError('A signed-in user is required.');
+    final row = await _client
+        .from('messages')
+        .insert({
+          'conversation_id': conversationId,
+          'sender_id': userId,
+          'type': type,
+          'content': mediaUrl,
         })
         .select()
         .single();

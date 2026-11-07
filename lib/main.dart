@@ -2,19 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/config/app_config.dart';
+import 'core/config/config_providers.dart';
 import 'core/router/app_router.dart';
 import 'core/supabase/supabase_bootstrap.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  const config = AppConfig(
-    supabaseUrl: String.fromEnvironment('SUPABASE_URL'),
-    supabaseAnonKey: String.fromEnvironment('SUPABASE_ANON_KEY'),
-    turnUrl: String.fromEnvironment('TURN_URL'),
-    turnUsername: String.fromEnvironment('TURN_USERNAME'),
+  const envUrl = String.fromEnvironment('SUPABASE_URL');
+  const envKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+  final config = AppConfig(
+    supabaseUrl: envUrl.isNotEmpty
+        ? envUrl
+        : 'https://kizlrklareszmhmftpdf.supabase.co',
+    supabaseAnonKey: envKey.isNotEmpty
+        ? envKey
+        : 'sb_publishable_6VsMgA0e7s2nGHbi1t7jgw_06b63-Af',
+    turnUrl: const String.fromEnvironment('TURN_URL'),
+    turnUsername: const String.fromEnvironment('TURN_USERNAME'),
   );
   await SupabaseBootstrap.initialize(config);
-  runApp(const ProviderScope(child: RelayApp()));
+  runApp(
+    ProviderScope(
+      overrides: [
+        appConfigProvider.overrideWithValue(config),
+      ],
+      child: const RelayApp(),
+    ),
+  );
 }
 
 class RelayApp extends ConsumerWidget {

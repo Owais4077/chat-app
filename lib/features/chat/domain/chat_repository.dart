@@ -2,7 +2,7 @@ import 'chat_message.dart';
 import 'conversation.dart';
 import 'conversation_summary.dart';
 
-abstract interface class ChatRepository {
+abstract class ChatRepository {
   Stream<List<Conversation>> watchConversations();
   Stream<List<ConversationSummary>> watchConversationSummaries();
   Stream<List<ChatMessage>> watchMessages(String conversationId);
@@ -16,6 +16,11 @@ abstract interface class ChatRepository {
     required String conversationId,
     required String text,
   });
+  Future<ChatMessage> sendMediaMessage({
+    required String conversationId,
+    required String mediaUrl,
+    required MessageType type,
+  }) async => sendTextMessage(conversationId: conversationId, text: mediaUrl);
   Future<List<GroupMember>> getGroupMembers(String conversationId);
   Future<void> addGroupMember({
     required String conversationId,

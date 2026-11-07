@@ -62,6 +62,28 @@ class MockChatRepository implements ChatRepository {
   }
 
   @override
+  Future<ChatMessage> sendMediaMessage({
+    required String conversationId,
+    required String mediaUrl,
+    required MessageType type,
+  }) async {
+    final message = ChatMessage(
+      id: 'message-${(_messages[conversationId]?.length ?? 0) + 1}',
+      conversationId: conversationId,
+      senderId: 'demo-user',
+      text: mediaUrl,
+      type: type,
+      mediaUrl: mediaUrl,
+      status: MessageStatus.sent,
+      createdAt: DateTime.now(),
+    );
+    final list = _messages.putIfAbsent(conversationId, () => []);
+    list.add(message);
+    _streams[conversationId]?.add(List.unmodifiable(list));
+    return message;
+  }
+
+  @override
   Future<List<GroupMember>> getGroupMembers(String conversationId) async =>
       _groupMembers[conversationId] ?? const [];
 

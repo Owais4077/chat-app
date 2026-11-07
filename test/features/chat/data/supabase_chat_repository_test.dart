@@ -156,6 +156,22 @@ class _FakeChatDataSource implements ChatDataSource {
   }
 
   @override
+  Future<Map<String, dynamic>> insertMediaMessage({
+    required String conversationId,
+    required String mediaUrl,
+    required String type,
+  }) async {
+    insertedText = mediaUrl;
+    return {
+      'id': 'message-3',
+      'conversation_id': conversationId,
+      'content': mediaUrl,
+      'type': type,
+      'created_at': '2026-10-21T20:00:00.000Z',
+    };
+  }
+
+  @override
   Stream<List<Map<String, dynamic>>> watchConversationRows() =>
       const Stream.empty();
 

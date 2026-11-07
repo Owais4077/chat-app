@@ -51,6 +51,13 @@ class _StreamingChatRepository implements ChatRepository {
   }) => throw UnimplementedError();
 
   @override
+  Future<ChatMessage> sendMediaMessage({
+    required String conversationId,
+    required String mediaUrl,
+    required MessageType type,
+  }) => throw UnimplementedError();
+
+  @override
   Future<String> startDirectConversation(String targetUserId) =>
       throw UnimplementedError();
 

@@ -111,6 +111,21 @@ class _FakeConversationChatRepository implements ChatRepository {
   );
 
   @override
+  Future<ChatMessage> sendMediaMessage({
+    required String conversationId,
+    required String mediaUrl,
+    required MessageType type,
+  }) async => ChatMessage(
+    id: 'media-msg-1',
+    conversationId: conversationId,
+    text: mediaUrl,
+    type: type,
+    mediaUrl: mediaUrl,
+    status: MessageStatus.sent,
+    createdAt: DateTime.now(),
+  );
+
+  @override
   Future<String> createGroup({
     required String name,
     required List<String> memberIds,

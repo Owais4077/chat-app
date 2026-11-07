@@ -6,6 +6,7 @@ import '../../../core/errors/app_failure.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../domain/chat_repository.dart';
 import '../domain/conversation_summary.dart';
+import 'call_screen.dart';
 import 'chat_controller.dart';
 import 'chat_providers.dart';
 import 'widgets/message_bubble.dart';
@@ -122,15 +123,25 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                 IconButton(
                   icon: const Icon(Icons.call_outlined),
                   tooltip: 'Voice call',
-                  onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Voice calling coming in next update!')),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => CallScreen(
+                        contactName: widget.title ?? 'Contact',
+                        isVideo: false,
+                      ),
+                    ),
                   ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.videocam_outlined),
                   tooltip: 'Video call',
-                  onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Video calling coming in next update!')),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => CallScreen(
+                        contactName: widget.title ?? 'Contact',
+                        isVideo: true,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -187,7 +198,11 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                 ],
               ),
             ),
-          MessageComposer(onSend: controller.send),
+          MessageComposer(
+            onSend: controller.send,
+            onSendMedia: (url, type) =>
+                controller.sendMedia(mediaUrl: url, type: type),
+          ),
         ],
       ),
     );

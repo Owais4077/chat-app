@@ -183,6 +183,13 @@ class _FakeGroupChatRepository implements ChatRepository {
   }) => throw UnimplementedError();
 
   @override
+  Future<ChatMessage> sendMediaMessage({
+    required String conversationId,
+    required String mediaUrl,
+    required MessageType type,
+  }) => throw UnimplementedError();
+
+  @override
   Future<String> createGroup({
     required String name,
     required List<String> memberIds,
