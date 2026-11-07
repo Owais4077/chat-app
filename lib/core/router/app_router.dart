@@ -215,6 +215,7 @@ GoRouter createAppRouter(
 class MainShell extends StatelessWidget {
   const MainShell({super.key, required this.child});
   final Widget child;
+
   @override
   Widget build(BuildContext context) {
     final path = GoRouterState.of(context).uri.path;
@@ -225,6 +226,54 @@ class MainShell extends StatelessWidget {
       RoutePaths.settings,
     ];
     final index = destinations.indexOf(path).clamp(0, 3);
+    final isWide = MediaQuery.sizeOf(context).width >= 700;
+
+    if (isWide) {
+      return Scaffold(
+        body: Row(
+          children: [
+            NavigationRail(
+              selectedIndex: index,
+              onDestinationSelected: (value) => context.go(destinations[value]),
+              labelType: NavigationRailLabelType.selected,
+              leading: const Padding(
+                padding: EdgeInsets.only(top: 8.0, bottom: 16.0),
+                child: CircleAvatar(
+                  backgroundColor: Color(0xFF00A884),
+                  radius: 18,
+                  child: Icon(Icons.chat, color: Colors.white, size: 20),
+                ),
+              ),
+              destinations: const [
+                NavigationRailDestination(
+                  icon: Icon(Icons.chat_bubble_outline),
+                  selectedIcon: Icon(Icons.chat_bubble, color: Color(0xFF00A884)),
+                  label: Text('Chats'),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.call_outlined),
+                  selectedIcon: Icon(Icons.call, color: Color(0xFF00A884)),
+                  label: Text('Calls'),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.people_outline),
+                  selectedIcon: Icon(Icons.people, color: Color(0xFF00A884)),
+                  label: Text('Contacts'),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.settings_outlined),
+                  selectedIcon: Icon(Icons.settings, color: Color(0xFF00A884)),
+                  label: Text('Settings'),
+                ),
+              ],
+            ),
+            const VerticalDivider(thickness: 1, width: 1),
+            Expanded(child: child),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('Relay')),
       body: child,
