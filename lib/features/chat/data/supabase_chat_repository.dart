@@ -199,26 +199,69 @@ class SupabaseChatDataSource implements ChatDataSource {
 
   @override
   Stream<List<Map<String, dynamic>>> watchConversationSummaryRows() async* {
-    final userId = _client.auth.currentUser?.id;
-    if (userId == null) return;
-    yield await _fetchConversationSummaryRows();
-    await for (final _
-        in _client
-            .from('conversation_members')
-            .stream(primaryKey: const ['conversation_id', 'user_id'])
-            .eq('user_id', userId)) {
-      yield await _fetchConversationSummaryRows();
+    var userId = _client.auth.currentUser?.id;
+
+    // Immediately yield safe initial data so the UI never hangs in loading
+    if (userId == null) {
+      yield const <Map<String, dynamic>>[];
+      try {
+        await _client.auth.onAuthStateChange
+            .firstWhere((e) => e.session?.user != null)
+            .timeout(const Duration(seconds: 3));
+        userId = _client.auth.currentUser?.id;
+      } catch (_) {}
     }
+
+    if (userId == null) {
+      yield const <Map<String, dynamic>>[];
+      return;
+    }
+
+    // Direct REST fetch to populate data immediately
+    try {
+      final initial = await _fetchConversationSummaryRows();
+      yield initial;
+    } catch (_) {
+      yield const <Map<String, dynamic>>[];
+    }
+
+    // Safely listen for realtime updates without crashing on connection drops
+    try {
+      await for (final _ in _client
+          .from('conversation_members')
+          .stream(primaryKey: const ['conversation_id', 'user_id'])
+          .eq('user_id', userId)
+          .handleError((_) {})) {
+        try {
+          yield await _fetchConversationSummaryRows();
+        } catch (_) {}
+      }
+    } catch (_) {}
   }
 
   @override
-  Stream<List<Map<String, dynamic>>> watchMessageRows(String conversationId) {
-    return _client
-        .from('messages')
-        .stream(primaryKey: const ['id'])
-        .eq('conversation_id', conversationId)
-        .order('created_at')
-        .map((rows) => List<Map<String, dynamic>>.from(rows));
+  Stream<List<Map<String, dynamic>>> watchMessageRows(String conversationId) async* {
+    try {
+      final rows = await _client
+          .from('messages')
+          .select()
+          .eq('conversation_id', conversationId)
+          .order('created_at');
+      yield List<Map<String, dynamic>>.from(rows as List);
+    } catch (_) {
+      yield const <Map<String, dynamic>>[];
+    }
+
+    try {
+      await for (final rows in _client
+          .from('messages')
+          .stream(primaryKey: const ['id'])
+          .eq('conversation_id', conversationId)
+          .order('created_at')
+          .handleError((_) {})) {
+        yield List<Map<String, dynamic>>.from(rows);
+      }
+    } catch (_) {}
   }
 
   @override
